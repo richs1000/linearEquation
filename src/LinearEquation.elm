@@ -35,6 +35,7 @@ type alias Model =
     , status : Status
     , threshold : Int
     , window : Int
+    , debug : Bool
     }
 
 
@@ -45,6 +46,7 @@ initialModel =
     , status = WaitingToStart
     , threshold = 4
     , window = 5
+    , debug = True
     }
 
 
@@ -70,6 +72,15 @@ view model =
         , viewFeedbackPanel model
         , viewButtonPanel model
         , viewProgressPanel model
+        , viewDebugPanel model
+        ]
+
+
+viewDebugPanel : Model -> Html Msg
+viewDebugPanel model =
+    div []
+        [ text ("threshold: " ++ String.fromInt model.threshold)
+        , text ("window: " ++ String.fromInt model.window)
         ]
 
 
