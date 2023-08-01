@@ -1,0 +1,56 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script src='https://etx-nec.s3.us-west-2.amazonaws.com/simcapi-js-3.0.6.min.js'></script>
+</head>
+
+<body>
+    <div id="elm-code-is-loaded-here"></div>
+
+    <script src="app.js"></script>
+    <script>
+        var model = new simcapi.CapiAdapter.CapiModel({
+            mastery: false,
+            threshold: 3,
+            window: 5,
+            debug: false
+        });
+
+        //Tells pipit to expose the following attributes
+        simcapi.CapiAdapter.expose('mastery', model);
+        simcapi.CapiAdapter.expose('threshold', model);
+        simcapi.CapiAdapter.expose('window', model);
+        simcapi.CapiAdapter.expose('debug', model);
+
+        var app = Elm.LinearEquation.init({
+            node: document.getElementById("elm-code-is-loaded-here"),
+            flags: { "threshold": 3, "window": 7, "mastery": false }
+        });
+
+        app.ports.sendToTorus.subscribe(function (mastery) {
+            console.log("Data from Elm: ", mastery);
+            model.set('mastery', mastery);
+            // Do I need this?
+            //simcapi.CapiAdapter.expose('mastery', model); 
+            alert("Congratulations! You're ready to move on. Press the NEXT button to advance to the next slide.");
+            simcapi.Transporter.triggerCheck();
+        });
+
+        // Tells pipit that the sim model is ready
+        simcapi.Transporter.notifyOnReady();
+    </script>
+</body>
+
+</html>
+
+
+<!-- 
+    
+    add iframe 
+    set source to https://richs1000.github.io/torus-test/
+    
+
+-->
