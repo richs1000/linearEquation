@@ -76,30 +76,22 @@ view model =
         ]
 
 
-viewDebugPanel : Model -> Html Msg
-viewDebugPanel model =
-    div []
-        [ text ("threshold: " ++ String.fromInt model.threshold)
-        , text ("window: " ++ String.fromInt model.window)
-        ]
-
-
 viewQuestionPanel : Model -> Html Msg
 viewQuestionPanel model =
     case model.status of
         WaitingToStart ->
-            div [] []
+            div [ id "questionPanel" ] []
 
         WaitingForAnswer ->
             viewQuestion model
 
         GotAnswer _ ->
-            div [] []
+            div [ id "questionPanel" ] []
 
 
 viewQuestion : Model -> Html Msg
 viewQuestion model =
-    div []
+    div [ id "questionPanel" ]
         [ text "If this is your equation:"
         , questionText model.question
         ]
@@ -109,25 +101,25 @@ questionText : Question -> Html Msg
 questionText quest =
     case quest of
         WhatIsTheSlope slope yIntercept ->
-            div []
+            div [ id "questionText" ]
                 [ h3 [] [ text (equationAsString slope yIntercept) ]
                 , text "What is the slope?"
                 ]
 
         WhatIsTheIntercept slope yIntercept ->
-            div []
+            div [ id "questionText" ]
                 [ h3 [] [ text (equationAsString slope yIntercept) ]
                 , text "What is the y-intercept?"
                 ]
 
         WhichGraph slope yIntercept ->
-            div []
+            div [ id "questionText" ]
                 [ h3 [] [ text (equationAsString slope yIntercept) ]
                 , text "Which graph corresponds to this equation?"
                 ]
 
         WhatIsY slope yIntercept x ->
-            div []
+            div [ id "questionText" ]
                 [ h3 [] [ text (equationAsString slope yIntercept) ]
                 , text ("If x = " ++ String.fromInt x ++ "What does y equal?")
                 ]
@@ -152,16 +144,16 @@ viewFeedbackPanel : Model -> Html Msg
 viewFeedbackPanel model =
     case model.status of
         WaitingToStart ->
-            div [] []
+            div [ id "feedbackPanel" ] []
 
         WaitingForAnswer ->
-            div [] [ text "Choose the correct answer" ]
+            div [ id "feedbackPanel" ] [ text "Choose the correct answer" ]
 
         GotAnswer RightAnswer ->
-            div [] [ text "Correct!" ]
+            div [ id "feedbackPanel" ] [ text "Correct!" ]
 
         GotAnswer WrongAnswer ->
-            div [] [ text "Incorrect" ]
+            div [ id "feedbackPanel" ] [ text "Incorrect" ]
 
 
 crossedThreshold : Model -> Bool
@@ -178,14 +170,14 @@ viewButtonPanel : Model -> Html Msg
 viewButtonPanel model =
     case model.status of
         WaitingToStart ->
-            div []
+            div [ id "buttonPanel" ]
                 [ button
                     [ onClick GetNextQuestion ]
                     [ text "Start" ]
                 ]
 
         WaitingForAnswer ->
-            div []
+            div [ id "buttonPanel" ]
                 [ button
                     [ onClick (GotResponse WrongAnswer) ]
                     [ text (String.fromFloat 5) ]
@@ -199,14 +191,14 @@ viewButtonPanel model =
 
         GotAnswer _ ->
             if crossedThreshold model then
-                div []
+                div [ id "buttonPanel" ]
                     [ button
                         [ onClick ReturnToTorus ]
                         [ text "Return to Torus" ]
                     ]
 
             else
-                div []
+                div [ id "buttonPanel" ]
                     [ button
                         [ onClick GetNextQuestion ]
                         [ text "Click here to continue" ]
@@ -216,7 +208,7 @@ viewButtonPanel model =
 viewProgressPanel : Model -> Html Msg
 viewProgressPanel model =
     if model.status == WaitingToStart then
-        div [] []
+        div [ id "progressPanel" ] []
 
     else
         let
@@ -231,8 +223,16 @@ viewProgressPanel model =
                 else
                     text "-"
         in
-        div [] <|
+        div [ id "progressPanel" ] <|
             List.map plusOrMinus reversedRWs
+
+
+viewDebugPanel : Model -> Html Msg
+viewDebugPanel model =
+    div [ id "debugPanel" ]
+        [ text ("threshold: " ++ String.fromInt model.threshold)
+        , text ("window: " ++ String.fromInt model.window)
+        ]
 
 
 mapNumberToQuestion : Int -> Float -> Float -> Int -> Question
