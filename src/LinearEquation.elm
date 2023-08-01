@@ -45,7 +45,7 @@ initialModel =
     , progress = []
     , status = WaitingToStart
     , threshold = 4
-    , window = 5
+    , window = 6
     , debug = True
     }
 

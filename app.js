@@ -5259,7 +5259,7 @@ var $author$project$LinearEquation$initialModel = {
 	question: A2($author$project$LinearEquation$WhatIsTheSlope, 2, 2),
 	status: $author$project$LinearEquation$WaitingToStart,
 	threshold: 4,
-	window: 5
+	window: 6
 };
 var $author$project$LinearEquation$init = function (flags) {
 	return _Utils_Tuple2(
