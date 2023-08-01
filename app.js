@@ -5254,6 +5254,7 @@ var $author$project$LinearEquation$WhatIsTheSlope = F2(
 		return {$: 'WhatIsTheSlope', a: a, b: b};
 	});
 var $author$project$LinearEquation$initialModel = {
+	debug: true,
 	progress: _List_Nil,
 	question: A2($author$project$LinearEquation$WhatIsTheSlope, 2, 2),
 	status: $author$project$LinearEquation$WaitingToStart,
@@ -5613,6 +5614,15 @@ var $author$project$LinearEquation$crossedThreshold = function (model) {
 	return _Utils_cmp(sumRightAnswers, model.threshold) > -1;
 };
 var $elm$core$String$fromFloat = _String_fromNumber;
+var $elm$json$Json$Encode$string = _Json_wrap;
+var $elm$html$Html$Attributes$stringProperty = F2(
+	function (key, string) {
+		return A2(
+			_VirtualDom_property,
+			key,
+			$elm$json$Json$Encode$string(string));
+	});
+var $elm$html$Html$Attributes$id = $elm$html$Html$Attributes$stringProperty('id');
 var $elm$virtual_dom$VirtualDom$Normal = function (a) {
 	return {$: 'Normal', a: a};
 };
@@ -5636,7 +5646,10 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 		case 'WaitingToStart':
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('buttonPanel')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -5653,7 +5666,10 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 		case 'WaitingForAnswer':
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('buttonPanel')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -5696,7 +5712,10 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 		default:
 			return $author$project$LinearEquation$crossedThreshold(model) ? A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('buttonPanel')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -5711,7 +5730,10 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 							]))
 					])) : A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('buttonPanel')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -5727,15 +5749,39 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 					]));
 	}
 };
+var $author$project$LinearEquation$viewDebugPanel = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('debugPanel')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text(
+				'threshold: ' + $elm$core$String$fromInt(model.threshold)),
+				$elm$html$Html$text(
+				'window: ' + $elm$core$String$fromInt(model.window))
+			]));
+};
 var $author$project$LinearEquation$viewFeedbackPanel = function (model) {
 	var _v0 = model.status;
 	switch (_v0.$) {
 		case 'WaitingToStart':
-			return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('feedbackPanel')
+					]),
+				_List_Nil);
 		case 'WaitingForAnswer':
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('feedbackPanel')
+					]),
 				_List_fromArray(
 					[
 						$elm$html$Html$text('Choose the correct answer')
@@ -5745,7 +5791,10 @@ var $author$project$LinearEquation$viewFeedbackPanel = function (model) {
 				var _v1 = _v0.a;
 				return A2(
 					$elm$html$Html$div,
-					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$id('feedbackPanel')
+						]),
 					_List_fromArray(
 						[
 							$elm$html$Html$text('Correct!')
@@ -5754,7 +5803,10 @@ var $author$project$LinearEquation$viewFeedbackPanel = function (model) {
 				var _v2 = _v0.a;
 				return A2(
 					$elm$html$Html$div,
-					_List_Nil,
+					_List_fromArray(
+						[
+							$elm$html$Html$Attributes$id('feedbackPanel')
+						]),
 					_List_fromArray(
 						[
 							$elm$html$Html$text('Incorrect')
@@ -5764,7 +5816,13 @@ var $author$project$LinearEquation$viewFeedbackPanel = function (model) {
 };
 var $author$project$LinearEquation$viewProgressPanel = function (model) {
 	if (_Utils_eq(model.status, $author$project$LinearEquation$WaitingToStart)) {
-		return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$id('progressPanel')
+				]),
+			_List_Nil);
 	} else {
 		var reversedRWs = $elm$core$List$reverse(model.progress);
 		var plusOrMinus = function (rOrW) {
@@ -5772,7 +5830,10 @@ var $author$project$LinearEquation$viewProgressPanel = function (model) {
 		};
 		return A2(
 			$elm$html$Html$div,
-			_List_Nil,
+			_List_fromArray(
+				[
+					$elm$html$Html$Attributes$id('progressPanel')
+				]),
 			A2($elm$core$List$map, plusOrMinus, reversedRWs));
 	}
 };
@@ -5789,7 +5850,10 @@ var $author$project$LinearEquation$questionText = function (quest) {
 			var yIntercept = quest.b;
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('questionText')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -5807,7 +5871,10 @@ var $author$project$LinearEquation$questionText = function (quest) {
 			var yIntercept = quest.b;
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('questionText')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -5825,7 +5892,10 @@ var $author$project$LinearEquation$questionText = function (quest) {
 			var yIntercept = quest.b;
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('questionText')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -5844,7 +5914,10 @@ var $author$project$LinearEquation$questionText = function (quest) {
 			var x = quest.c;
 			return A2(
 				$elm$html$Html$div,
-				_List_Nil,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('questionText')
+					]),
 				_List_fromArray(
 					[
 						A2(
@@ -5863,7 +5936,10 @@ var $author$project$LinearEquation$questionText = function (quest) {
 var $author$project$LinearEquation$viewQuestion = function (model) {
 	return A2(
 		$elm$html$Html$div,
-		_List_Nil,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('questionPanel')
+			]),
 		_List_fromArray(
 			[
 				$elm$html$Html$text('If this is your equation:'),
@@ -5874,11 +5950,23 @@ var $author$project$LinearEquation$viewQuestionPanel = function (model) {
 	var _v0 = model.status;
 	switch (_v0.$) {
 		case 'WaitingToStart':
-			return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('questionPanel')
+					]),
+				_List_Nil);
 		case 'WaitingForAnswer':
 			return $author$project$LinearEquation$viewQuestion(model);
 		default:
-			return A2($elm$html$Html$div, _List_Nil, _List_Nil);
+			return A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('questionPanel')
+					]),
+				_List_Nil);
 	}
 };
 var $author$project$LinearEquation$view = function (model) {
@@ -5894,12 +5982,11 @@ var $author$project$LinearEquation$view = function (model) {
 					[
 						$elm$html$Html$text('Linear Equations')
 					])),
-				$elm$html$Html$text(
-				$elm$core$String$fromInt(model.window)),
 				$author$project$LinearEquation$viewQuestionPanel(model),
 				$author$project$LinearEquation$viewFeedbackPanel(model),
 				$author$project$LinearEquation$viewButtonPanel(model),
-				$author$project$LinearEquation$viewProgressPanel(model)
+				$author$project$LinearEquation$viewProgressPanel(model),
+				$author$project$LinearEquation$viewDebugPanel(model)
 			]));
 };
 var $author$project$LinearEquation$main = $elm$browser$Browser$element(
