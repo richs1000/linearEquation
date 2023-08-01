@@ -28,13 +28,14 @@
         // Tells pipit that the sim model is ready
         simcapi.Transporter.notifyOnReady();
 
+        var app = null;
+
         model.on('change:threshold', function () {
             console.log("new threshold: ", model.get('threshold'));
-        });
-
-        var app = Elm.LinearEquation.init({
-            node: document.getElementById("elm-code-is-loaded-here"),
-            flags: { "threshold": model.get('threshold'), "window": model.get('window'), "mastery": model.get('mastery') }
+            app = Elm.LinearEquation.init({
+                node: document.getElementById("elm-code-is-loaded-here"),
+                flags: { "threshold": model.get('threshold'), "window": model.get('window'), "mastery": model.get('mastery') }
+            });
         });
 
         app.ports.sendToTorus.subscribe(function (mastery) {
