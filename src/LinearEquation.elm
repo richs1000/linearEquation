@@ -8,6 +8,9 @@ import Random
 import Round
 
 
+port getFromTorus : (Flags -> msg) -> Sub msg
+
+
 port sendToTorus : Bool -> Cmd msg
 
 
@@ -55,11 +58,11 @@ type Msg
     | GotRandomQuestion Question
     | GotResponse RightOrWrong
     | ReturnToTorus
+    | GetDataFromTorus Flags
 
 
 type alias Flags =
-    { mastery : Bool
-    , threshold : Int
+    { threshold : Int
     , window : Int
     }
 
@@ -303,24 +306,37 @@ update msg model =
         ReturnToTorus ->
             ( model, sendToTorus True )
 
+        GetDataFromTorus flags ->
+            ( { model
+                | threshold = flags.threshold
+                , window = flags.window
+              }
+            , Cmd.none
+            )
+
 
 initialCmd : Cmd Msg
 initialCmd =
     Cmd.none
 
 
-init : Flags -> ( Model, Cmd Msg )
-init flags =
-    ( { initialModel | threshold = flags.threshold, window = flags.window }
+init : () -> ( Model, Cmd Msg )
+init _ =
+    ( initialModel
     , initialCmd
     )
 
 
-main : Program Flags Model Msg
+subscriptions : Model -> Sub Msg
+subscriptions _ =
+    getFromTorus GetDataFromTorus
+
+
+main : Program () Model Msg
 main =
     Browser.element
         { init = init
         , view = view
         , update = update
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
