@@ -25,9 +25,12 @@
         simcapi.CapiAdapter.expose('window', model);
         simcapi.CapiAdapter.expose('debug', model);
 
+        // Tells pipit that the sim model is ready
+        simcapi.Transporter.notifyOnReady();
+
         var app = Elm.LinearEquation.init({
             node: document.getElementById("elm-code-is-loaded-here"),
-            flags: { "threshold": model.threshold, "window": model.window, "mastery": model.mastery }
+            flags: { "threshold": model.get('threshold'), "window": model.get('window'), "mastery": model.get('mastery') }
         });
 
         app.ports.sendToTorus.subscribe(function (mastery) {
@@ -38,9 +41,6 @@
             alert("Congratulations! You're ready to move on. Press the NEXT button to advance to the next slide.");
             simcapi.Transporter.triggerCheck();
         });
-
-        // Tells pipit that the sim model is ready
-        simcapi.Transporter.notifyOnReady();
     </script>
 </body>
 
