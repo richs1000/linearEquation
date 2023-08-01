@@ -27,7 +27,7 @@
 
         var app = Elm.LinearEquation.init({
             node: document.getElementById("elm-code-is-loaded-here"),
-            flags: { "threshold": 3, "window": 7, "mastery": false }
+            flags: { "threshold": model.threshold, "window": model.window, "mastery": model.mastery }
         });
 
         app.ports.sendToTorus.subscribe(function (mastery) {

@@ -66,7 +66,6 @@ view : Model -> Html Msg
 view model =
     div []
         [ h1 [] [ text "Linear Equations" ]
-        , text (String.fromInt model.window)
         , viewQuestionPanel model
         , viewFeedbackPanel model
         , viewButtonPanel model
