@@ -5245,14 +5245,36 @@ var $elm$browser$Browser$element = _Browser_element;
 var $elm$core$Platform$Cmd$batch = _Platform_batch;
 var $elm$core$Platform$Cmd$none = $elm$core$Platform$Cmd$batch(_List_Nil);
 var $author$project$LinearEquation$initialCmd = $elm$core$Platform$Cmd$none;
+var $author$project$LinearEquation$NothingYet = {$: 'NothingYet'};
 var $author$project$LinearEquation$WaitingToStart = {$: 'WaitingToStart'};
 var $author$project$LinearEquation$WhatIsTheSlope = F2(
 	function (a, b) {
 		return {$: 'WhatIsTheSlope', a: a, b: b};
 	});
+var $elm$core$List$repeatHelp = F3(
+	function (result, n, value) {
+		repeatHelp:
+		while (true) {
+			if (n <= 0) {
+				return result;
+			} else {
+				var $temp$result = A2($elm$core$List$cons, value, result),
+					$temp$n = n - 1,
+					$temp$value = value;
+				result = $temp$result;
+				n = $temp$n;
+				value = $temp$value;
+				continue repeatHelp;
+			}
+		}
+	});
+var $elm$core$List$repeat = F2(
+	function (n, value) {
+		return A3($elm$core$List$repeatHelp, _List_Nil, n, value);
+	});
 var $author$project$LinearEquation$initialModel = {
 	debug: true,
-	progress: _List_Nil,
+	progress: A2($elm$core$List$repeat, 6, $author$project$LinearEquation$NothingYet),
 	question: A2($author$project$LinearEquation$WhatIsTheSlope, 2, 2),
 	status: $author$project$LinearEquation$WaitingToStart,
 	threshold: 4,
@@ -5595,7 +5617,11 @@ var $author$project$LinearEquation$update = F2(
 				return _Utils_Tuple2(
 					_Utils_update(
 						model,
-						{threshold: flags.threshold, window: flags.window}),
+						{
+							progress: A2($elm$core$List$repeat, flags.window, $author$project$LinearEquation$NothingYet),
+							threshold: flags.threshold,
+							window: flags.window
+						}),
 					$elm$core$Platform$Cmd$none);
 		}
 	});
@@ -5807,32 +5833,76 @@ var $author$project$LinearEquation$viewFeedbackPanel = function (model) {
 						$elm$html$Html$text('Choose the correct answer')
 					]));
 		default:
-			if (_v0.a.$ === 'RightAnswer') {
-				var _v1 = _v0.a;
-				return A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$id('feedbackPanel')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Correct!')
-						]));
-			} else {
-				var _v2 = _v0.a;
-				return A2(
-					$elm$html$Html$div,
-					_List_fromArray(
-						[
-							$elm$html$Html$Attributes$id('feedbackPanel')
-						]),
-					_List_fromArray(
-						[
-							$elm$html$Html$text('Incorrect')
-						]));
+			switch (_v0.a.$) {
+				case 'RightAnswer':
+					var _v1 = _v0.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$id('feedbackPanel')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Correct!')
+							]));
+				case 'WrongAnswer':
+					var _v2 = _v0.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$id('feedbackPanel')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Incorrect')
+							]));
+				default:
+					var _v3 = _v0.a;
+					return A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$id('feedbackPanel')
+							]),
+						_List_fromArray(
+							[
+								$elm$html$Html$text('Nothing Yet')
+							]));
 			}
 	}
+};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $author$project$LinearEquation$boxStyle = _List_fromArray(
+	[
+		A2($elm$html$Html$Attributes$style, 'border-radius', '5px'),
+		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+		A2($elm$html$Html$Attributes$style, 'width', '10px'),
+		A2($elm$html$Html$Attributes$style, 'height', '10px'),
+		A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+	]);
+var $author$project$LinearEquation$progressBox = function (rOrW) {
+	return _Utils_eq(rOrW, $author$project$LinearEquation$RightAnswer) ? A2(
+		$elm$html$Html$div,
+		A2(
+			$elm$core$List$cons,
+			A2($elm$html$Html$Attributes$style, 'background-color', 'green'),
+			$author$project$LinearEquation$boxStyle),
+		_List_Nil) : (_Utils_eq(rOrW, $author$project$LinearEquation$WrongAnswer) ? A2(
+		$elm$html$Html$div,
+		A2(
+			$elm$core$List$cons,
+			A2($elm$html$Html$Attributes$style, 'background-color', 'red'),
+			$author$project$LinearEquation$boxStyle),
+		_List_Nil) : A2(
+		$elm$html$Html$div,
+		A2(
+			$elm$core$List$cons,
+			A2($elm$html$Html$Attributes$style, 'background-color', 'grey'),
+			$author$project$LinearEquation$boxStyle),
+		_List_Nil));
 };
 var $author$project$LinearEquation$viewProgressPanel = function (model) {
 	if (_Utils_eq(model.status, $author$project$LinearEquation$WaitingToStart)) {
@@ -5844,17 +5914,17 @@ var $author$project$LinearEquation$viewProgressPanel = function (model) {
 				]),
 			_List_Nil);
 	} else {
-		var reversedRWs = $elm$core$List$reverse(model.progress);
-		var plusOrMinus = function (rOrW) {
-			return _Utils_eq(rOrW, $author$project$LinearEquation$RightAnswer) ? $elm$html$Html$text('+') : $elm$html$Html$text('-');
-		};
+		var progressBar = A2(
+			$elm$core$List$map,
+			$author$project$LinearEquation$progressBox,
+			$elm$core$List$reverse(model.progress));
 		return A2(
 			$elm$html$Html$div,
 			_List_fromArray(
 				[
 					$elm$html$Html$Attributes$id('progressPanel')
 				]),
-			A2($elm$core$List$map, plusOrMinus, reversedRWs));
+			progressBar);
 	}
 };
 var $author$project$LinearEquation$equationAsString = F2(

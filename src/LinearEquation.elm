@@ -2,7 +2,7 @@ port module LinearEquation exposing (..)
 
 import Browser
 import Html exposing (..)
-import Html.Attributes exposing (class, classList, id, name, src, title, type_)
+import Html.Attributes exposing (class, classList, id, name, src, style, title, type_)
 import Html.Events exposing (onClick)
 import Random
 import Round
@@ -24,6 +24,7 @@ type Question
 type RightOrWrong
     = RightAnswer
     | WrongAnswer
+    | NothingYet
 
 
 type Status
@@ -45,7 +46,7 @@ type alias Model =
 initialModel : Model
 initialModel =
     { question = WhatIsTheSlope 2 2
-    , progress = []
+    , progress = List.repeat 6 NothingYet
     , status = WaitingToStart
     , threshold = 4
     , window = 6
@@ -158,6 +159,9 @@ viewFeedbackPanel model =
         GotAnswer WrongAnswer ->
             div [ id "feedbackPanel" ] [ text "Incorrect" ]
 
+        GotAnswer NothingYet ->
+            div [ id "feedbackPanel" ] [ text "Nothing Yet" ]
+
 
 crossedThreshold : Model -> Bool
 crossedThreshold model =
@@ -208,6 +212,28 @@ viewButtonPanel model =
                     ]
 
 
+boxStyle : List (Attribute msg)
+boxStyle =
+    [ style "border-radius" "5px"
+    , style "padding" "5px"
+    , style "width" "10px"
+    , style "height" "10px"
+    , style "display" "inline-block"
+    ]
+
+
+progressBox : RightOrWrong -> Html Msg
+progressBox rOrW =
+    if rOrW == RightAnswer then
+        div (style "background-color" "green" :: boxStyle) []
+
+    else if rOrW == WrongAnswer then
+        div (style "background-color" "red" :: boxStyle) []
+
+    else
+        div (style "background-color" "grey" :: boxStyle) []
+
+
 viewProgressPanel : Model -> Html Msg
 viewProgressPanel model =
     if model.status == WaitingToStart then
@@ -215,19 +241,13 @@ viewProgressPanel model =
 
     else
         let
-            reversedRWs =
+            progressBar =
                 List.reverse model.progress
-
-            plusOrMinus : RightOrWrong -> Html Msg
-            plusOrMinus rOrW =
-                if rOrW == RightAnswer then
-                    text "+"
-
-                else
-                    text "-"
+                    |> List.map progressBox
         in
-        div [ id "progressPanel" ] <|
-            List.map plusOrMinus reversedRWs
+        div
+            [ id "progressPanel" ]
+            progressBar
 
 
 viewDebugPanel : Model -> Html Msg
@@ -310,6 +330,7 @@ update msg model =
             ( { model
                 | threshold = flags.threshold
                 , window = flags.window
+                , progress = List.repeat flags.window NothingYet
               }
             , Cmd.none
             )
