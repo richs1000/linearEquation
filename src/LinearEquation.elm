@@ -65,6 +65,7 @@ type Msg
 type alias Flags =
     { threshold : Int
     , window : Int
+    , debug : Bool
     }
 
 
@@ -131,17 +132,19 @@ questionText quest =
 
 equationAsString : Float -> Float -> String
 equationAsString slope yIntercept =
-    if yIntercept < 0 then
-        "y = "
-            ++ String.fromFloat slope
-            ++ "x - "
-            ++ String.fromFloat (abs yIntercept)
+    let
+        operator =
+            if yIntercept < 0 then
+                "- "
 
-    else
-        "y = "
-            ++ String.fromFloat slope
-            ++ "x + "
-            ++ String.fromFloat yIntercept
+            else
+                "+ "
+    in
+    "y = "
+        ++ String.fromFloat slope
+        ++ "x "
+        ++ operator
+        ++ String.fromFloat (abs yIntercept)
 
 
 viewFeedbackPanel : Model -> Html Msg
@@ -252,29 +255,40 @@ viewProgressPanel model =
 
 viewDebugPanel : Model -> Html Msg
 viewDebugPanel model =
-    div [ id "debugPanel" ]
-        [ text ("threshold: " ++ String.fromInt model.threshold)
-        , text ("window: " ++ String.fromInt model.window)
-        ]
+    if model.debug then
+        div [ id "debugPanel" ]
+            [ text ("threshold: " ++ String.fromInt model.threshold)
+            , text ("window: " ++ String.fromInt model.window)
+            ]
+
+    else
+        div [ id "debugPanel" ] []
 
 
 mapNumberToQuestion : Int -> Float -> Float -> Int -> Question
 mapNumberToQuestion question slope yIntercept xValue =
+    let
+        roundSlope =
+            Round.roundNum 2 slope
+
+        roundYIntercept =
+            Round.roundNum 2 yIntercept
+    in
     case question of
         0 ->
-            WhatIsTheSlope slope yIntercept
+            WhatIsTheSlope roundSlope roundYIntercept
 
         1 ->
-            WhatIsTheIntercept slope yIntercept
+            WhatIsTheIntercept roundSlope roundYIntercept
 
         2 ->
-            WhichGraph slope yIntercept
+            WhichGraph roundSlope roundYIntercept
 
         3 ->
-            WhatIsY slope yIntercept xValue
+            WhatIsY roundSlope roundYIntercept xValue
 
         _ ->
-            WhatIsTheSlope slope yIntercept
+            WhatIsTheSlope roundSlope roundYIntercept
 
 
 randomQuestionGenerator : Random.Generator Question
@@ -330,6 +344,7 @@ update msg model =
             ( { model
                 | threshold = flags.threshold
                 , window = flags.window
+                , debug = flags.debug
                 , progress = List.repeat flags.window NothingYet
               }
             , Cmd.none

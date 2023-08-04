@@ -16,7 +16,7 @@
             mastery: false,
             threshold: 2,
             window: 3,
-            debug: false
+            debug: true
         });
 
         //Tells pipit to expose the following attributes
@@ -33,10 +33,20 @@
         });
 
         model.on('change:threshold', function () {
+            console.log("new debug: ", model.get('debug'));
+            app.ports.getFromTorus.send({
+                'threshold': model.get('threshold'),
+                'window': model.get('window'),
+                'debug': model.get('debug')
+            });
+        });
+
+        model.on('change:threshold', function () {
             console.log("new threshold: ", model.get('threshold'));
             app.ports.getFromTorus.send({
                 'threshold': model.get('threshold'),
-                'window': model.get('window')
+                'window': model.get('window'),
+                'debug': model.get('debug')
             });
         });
 
@@ -44,15 +54,14 @@
             console.log("new window: ", model.get('window'));
             app.ports.getFromTorus.send({
                 'threshold': model.get('threshold'),
-                'window': model.get('window')
+                'window': model.get('window'),
+                'debug': model.get('debug')
             });
         });
 
         app.ports.sendToTorus.subscribe(function (mastery) {
             console.log("Data from Elm: ", mastery);
             model.set('mastery', mastery);
-            // Do I need this?
-            //simcapi.CapiAdapter.expose('mastery', model); 
             alert("Congratulations! You're ready to move on. Press the NEXT button to advance to the next slide.");
             simcapi.Transporter.triggerCheck();
         });
