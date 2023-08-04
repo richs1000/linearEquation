@@ -14,32 +14,37 @@ port getFromTorus : (Flags -> msg) -> Sub msg
 port sendToTorus : Bool -> Cmd msg
 
 
+type Answer
+    = NumberChoice Float -- when the answers are a single number (e.g., what's the slope?)
+    | ScatterPlotChoice Float Float Float -- Ax^2 + Bx + C when the answers require an equation (e.g., which graph?)
+
+
 type Question
-    = WhatIsTheSlope Float Float
-    | WhatIsTheIntercept Float Float
-    | WhichGraph Float Float
-    | WhatIsY Float Float Int
+    = WhatIsTheSlope Float Float -- given an equation, what is the slope?
+    | WhatIsTheIntercept Float Float -- given an equation, what is the y-intercept?
+    | WhichGraph Float Float -- which graph corresponds to this equation?
+    | WhatIsY Float Float Int -- given an equation and x, what is the value of y?
 
 
 type RightOrWrong
-    = RightAnswer
-    | WrongAnswer
-    | NothingYet
+    = RightAnswer -- user chose the correct answer
+    | WrongAnswer -- user chose the wrong answer
+    | NothingYet -- this is used by progress bar when the window is bigger than the number of responses
 
 
 type Status
-    = WaitingToStart
-    | WaitingForAnswer
-    | GotAnswer RightOrWrong
+    = WaitingToStart -- user needs to ask for next question
+    | WaitingForAnswer -- user needs to choose an answer
+    | GotAnswer RightOrWrong -- user has answered, so now we need to give feedback
 
 
 type alias Model =
-    { question : Question
-    , progress : List RightOrWrong
-    , status : Status
-    , threshold : Int
-    , window : Int
-    , debug : Bool
+    { question : Question -- What question do we show to the user?
+    , progress : List RightOrWrong -- How many questions has the user gotten right/wrong?
+    , status : Status -- What should we be showing to the user?
+    , threshold : Int -- How many questions does the user need to get right?
+    , window : Int -- How big is the window for reaching the threshold?
+    , debug : Bool -- Do we show debug information?
     }
 
 
@@ -55,17 +60,17 @@ initialModel =
 
 
 type Msg
-    = GetNextQuestion
-    | GotRandomQuestion Question
-    | GotResponse RightOrWrong
-    | ReturnToTorus
-    | GetDataFromTorus Flags
+    = GetNextQuestion -- Generate random numbers for the next question
+    | GotRandomQuestion Question -- Use random numbers to create and display next question
+    | GotResponse RightOrWrong -- Give feedback to user about their answer
+    | ReturnToTorus -- The user reached the threshold, go back to Torus (send to JavaScript)
+    | GetDataFromTorus Flags -- Data coming in from Torus (get from JavaScript)
 
 
 type alias Flags =
-    { threshold : Int
-    , window : Int
-    , debug : Bool
+    { threshold : Int -- User needs to get <threshold> questions right...
+    , window : Int -- out of the last <window> questions
+    , debug : Bool -- True when we should show debug info
     }
 
 
