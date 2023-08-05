@@ -181,6 +181,34 @@ crossedThreshold model =
     sumRightAnswers >= model.threshold
 
 
+rightAnswer : Question -> String
+rightAnswer quest =
+    case quest of
+        WhatIsTheSlope slope yIntercept ->
+            div [ id "questionText" ]
+                [ h3 [] [ text (equationAsString slope yIntercept) ]
+                , text "What is the slope?"
+                ]
+
+        WhatIsTheIntercept slope yIntercept ->
+            div [ id "questionText" ]
+                [ h3 [] [ text (equationAsString slope yIntercept) ]
+                , text "What is the y-intercept?"
+                ]
+
+        WhichGraph slope yIntercept ->
+            div [ id "questionText" ]
+                [ h3 [] [ text (equationAsString slope yIntercept) ]
+                , text "Which graph corresponds to this equation?"
+                ]
+
+        WhatIsY slope yIntercept x ->
+            div [ id "questionText" ]
+                [ h3 [] [ text (equationAsString slope yIntercept) ]
+                , text ("If x = " ++ String.fromInt x ++ "What does y equal?")
+                ]
+
+
 viewButtonPanel : Model -> Html Msg
 viewButtonPanel model =
     case model.status of
