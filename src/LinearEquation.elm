@@ -1,11 +1,12 @@
 port module LinearEquation exposing (..)
 
+import Array
 import Browser
 import Html exposing (..)
 import Html.Attributes exposing (class, classList, id, name, src, style, title, type_)
 import Html.Events exposing (onClick)
+import Maybe exposing (withDefault)
 import Random
-import Round
 
 
 port getFromTorus : (Flags -> msg) -> Sub msg
@@ -15,15 +16,70 @@ port sendToTorus : Bool -> Cmd msg
 
 
 type Answer
-    = NumberChoice Float -- when the answers are a single number (e.g., what's the slope?)
-    | ScatterPlotChoice Float Float Float -- Ax^2 + Bx + C when the answers require an equation (e.g., which graph?)
+    = NumberChoice Int -- when the answers are a single number (e.g., what's the slope?)
+    | NoChoice
 
 
-type Question
-    = WhatIsTheSlope Float Float -- given an equation, what is the slope?
-    | WhatIsTheIntercept Float Float -- given an equation, what is the y-intercept?
-    | WhichGraph Float Float -- which graph corresponds to this equation?
-    | WhatIsY Float Float Int -- given an equation and x, what is the value of y?
+type alias Choice =
+    { answer : Answer
+    , feedback : String
+    }
+
+
+emptyChoice : Choice
+emptyChoice =
+    { answer = NoChoice, feedback = "Empty Feedback" }
+
+
+type alias RandomOrder =
+    { first : Int
+    , second : Int
+    , third : Int
+    }
+
+
+defaultOrder : RandomOrder
+defaultOrder =
+    { first = 1, second = 2, third = 3 }
+
+
+type QuestionType
+    = WhatIsTheSlope
+    | WhatIsTheIntercept
+    | WhatIsY
+    | WhichGraph
+
+
+
+{-
+   To randomize the order of questions, here's what I did:
+   * The choices array is always in the same order: right answer, distractor 1, distractor 2
+   * The randomOrder record has three fields: first, second and third
+       * The first field gives an index from 0 to 2, that index tells you what item in the choices array was displayed in the first button
+       * The second field gives an index from 0 to 2, that index tells you what item in the choices array was displayed in the second button
+       * The third field gives an index from 0 to 2, that index tells you what item in the choices array was displayed in the third button
+-}
+
+
+type alias Question =
+    { questionType : QuestionType
+    , slope : Int
+    , yIntercept : Int
+    , xValue : Int
+    , choices : Array.Array Choice -- right choice, wrong choice 1, wrong choice 2
+    , randomOrder : RandomOrder -- first button has choice <x>, second button has choice <y>, third button has choice <z>
+    }
+
+
+emptyQuestion : Question
+emptyQuestion =
+    { questionType = WhatIsTheSlope
+    , slope = 0
+    , yIntercept = 0
+    , xValue = 0
+    , choices = Array.empty
+    , randomOrder = defaultOrder
+    }
 
 
 type RightOrWrong
@@ -35,11 +91,12 @@ type RightOrWrong
 type Status
     = WaitingToStart -- user needs to ask for next question
     | WaitingForAnswer -- user needs to choose an answer
-    | GotAnswer RightOrWrong -- user has answered, so now we need to give feedback
+    | GotAnswer -- user has answered, so now we need to give feedback
 
 
 type alias Model =
     { question : Question -- What question do we show to the user?
+    , userChoice : Int -- Which button did user choose? (1, 2 or 3)
     , progress : List RightOrWrong -- How many questions has the user gotten right/wrong?
     , status : Status -- What should we be showing to the user?
     , threshold : Int -- How many questions does the user need to get right?
@@ -50,7 +107,8 @@ type alias Model =
 
 initialModel : Model
 initialModel =
-    { question = WhatIsTheSlope 2 2
+    { question = emptyQuestion
+    , userChoice = 0
     , progress = List.repeat 6 NothingYet
     , status = WaitingToStart
     , threshold = 4
@@ -62,7 +120,7 @@ initialModel =
 type Msg
     = GetNextQuestion -- Generate random numbers for the next question
     | GotRandomQuestion Question -- Use random numbers to create and display next question
-    | GotResponse RightOrWrong -- Give feedback to user about their answer
+    | GotResponse Int -- Give feedback to user about their answer
     | ReturnToTorus -- The user reached the threshold, go back to Torus (send to JavaScript)
     | GetDataFromTorus Flags -- Data coming in from Torus (get from JavaScript)
 
@@ -93,49 +151,35 @@ viewQuestionPanel model =
             div [ id "questionPanel" ] []
 
         WaitingForAnswer ->
-            viewQuestion model
+            div [ id "questionPanel" ]
+                [ text "If this is your equation:"
+                , div [ id "questionText" ]
+                    [ h3 [] [ text (equationAsString model.question.slope model.question.yIntercept) ]
+                    , text (questionText model.question)
+                    ]
+                ]
 
-        GotAnswer _ ->
+        GotAnswer ->
             div [ id "questionPanel" ] []
 
 
-viewQuestion : Model -> Html Msg
-viewQuestion model =
-    div [ id "questionPanel" ]
-        [ text "If this is your equation:"
-        , questionText model.question
-        ]
+questionText : Question -> String
+questionText question =
+    case question.questionType of
+        WhatIsTheSlope ->
+            "What is the slope?"
+
+        WhatIsTheIntercept ->
+            "What is the y-intercept?"
+
+        WhichGraph ->
+            "Which graph corresponds to this equation?"
+
+        WhatIsY ->
+            "If x = " ++ String.fromInt question.xValue ++ "what does y equal?"
 
 
-questionText : Question -> Html Msg
-questionText quest =
-    case quest of
-        WhatIsTheSlope slope yIntercept ->
-            div [ id "questionText" ]
-                [ h3 [] [ text (equationAsString slope yIntercept) ]
-                , text "What is the slope?"
-                ]
-
-        WhatIsTheIntercept slope yIntercept ->
-            div [ id "questionText" ]
-                [ h3 [] [ text (equationAsString slope yIntercept) ]
-                , text "What is the y-intercept?"
-                ]
-
-        WhichGraph slope yIntercept ->
-            div [ id "questionText" ]
-                [ h3 [] [ text (equationAsString slope yIntercept) ]
-                , text "Which graph corresponds to this equation?"
-                ]
-
-        WhatIsY slope yIntercept x ->
-            div [ id "questionText" ]
-                [ h3 [] [ text (equationAsString slope yIntercept) ]
-                , text ("If x = " ++ String.fromInt x ++ "What does y equal?")
-                ]
-
-
-equationAsString : Float -> Float -> String
+equationAsString : Int -> Int -> String
 equationAsString slope yIntercept =
     let
         operator =
@@ -146,10 +190,29 @@ equationAsString slope yIntercept =
                 "+ "
     in
     "y = "
-        ++ String.fromFloat slope
+        ++ String.fromInt slope
         ++ "x "
         ++ operator
-        ++ String.fromFloat (abs yIntercept)
+        ++ String.fromInt (abs yIntercept)
+
+
+extractFeedback : Model -> String
+extractFeedback model =
+    let
+        index =
+            if model.userChoice == model.question.randomOrder.first then
+                0
+
+            else if model.userChoice == model.question.randomOrder.second then
+                1
+
+            else
+                2
+    in
+    model.question.choices
+        |> Array.get index
+        |> withDefault emptyChoice
+        |> .feedback
 
 
 viewFeedbackPanel : Model -> Html Msg
@@ -161,14 +224,8 @@ viewFeedbackPanel model =
         WaitingForAnswer ->
             div [ id "feedbackPanel" ] [ text "Choose the correct answer" ]
 
-        GotAnswer RightAnswer ->
-            div [ id "feedbackPanel" ] [ text "Correct!" ]
-
-        GotAnswer WrongAnswer ->
-            div [ id "feedbackPanel" ] [ text "Incorrect" ]
-
-        GotAnswer NothingYet ->
-            div [ id "feedbackPanel" ] [ text "Nothing Yet" ]
+        GotAnswer ->
+            div [ id "feedbackPanel" ] [ text (extractFeedback model) ]
 
 
 crossedThreshold : Model -> Bool
@@ -181,32 +238,31 @@ crossedThreshold model =
     sumRightAnswers >= model.threshold
 
 
-rightAnswer : Question -> String
-rightAnswer quest =
-    case quest of
-        WhatIsTheSlope slope yIntercept ->
-            div [ id "questionText" ]
-                [ h3 [] [ text (equationAsString slope yIntercept) ]
-                , text "What is the slope?"
-                ]
+extractAnswer : Int -> Model -> String
+extractAnswer buttonIndex model =
+    let
+        answerIndex =
+            if buttonIndex == model.question.randomOrder.first then
+                0
 
-        WhatIsTheIntercept slope yIntercept ->
-            div [ id "questionText" ]
-                [ h3 [] [ text (equationAsString slope yIntercept) ]
-                , text "What is the y-intercept?"
-                ]
+            else if buttonIndex == model.question.randomOrder.second then
+                1
 
-        WhichGraph slope yIntercept ->
-            div [ id "questionText" ]
-                [ h3 [] [ text (equationAsString slope yIntercept) ]
-                , text "Which graph corresponds to this equation?"
-                ]
+            else
+                2
 
-        WhatIsY slope yIntercept x ->
-            div [ id "questionText" ]
-                [ h3 [] [ text (equationAsString slope yIntercept) ]
-                , text ("If x = " ++ String.fromInt x ++ "What does y equal?")
-                ]
+        answer =
+            model.question.choices
+                |> Array.get answerIndex
+                |> withDefault emptyChoice
+                |> .answer
+    in
+    case answer of
+        NoChoice ->
+            "No Choice"
+
+        NumberChoice numberAnswer ->
+            String.fromInt numberAnswer
 
 
 viewButtonPanel : Model -> Html Msg
@@ -222,17 +278,17 @@ viewButtonPanel model =
         WaitingForAnswer ->
             div [ id "buttonPanel" ]
                 [ button
-                    [ onClick (GotResponse WrongAnswer) ]
-                    [ text (String.fromFloat 5) ]
+                    [ onClick (GotResponse 0) ]
+                    [ text (extractAnswer 0 model) ]
                 , button
-                    [ onClick (GotResponse WrongAnswer) ]
-                    [ text (String.fromFloat (5 + 7)) ]
+                    [ onClick (GotResponse 1) ]
+                    [ text (extractAnswer 1 model) ]
                 , button
-                    [ onClick (GotResponse RightAnswer) ]
-                    [ text (String.fromFloat 7) ]
+                    [ onClick (GotResponse 2) ]
+                    [ text (extractAnswer 2 model) ]
                 ]
 
-        GotAnswer _ ->
+        GotAnswer ->
             if crossedThreshold model then
                 div [ id "buttonPanel" ]
                     [ button
@@ -298,45 +354,128 @@ viewDebugPanel model =
         div [ id "debugPanel" ] []
 
 
-mapNumberToQuestion : Int -> Float -> Float -> Int -> Question
-mapNumberToQuestion question slope yIntercept xValue =
-    let
-        roundSlope =
-            Round.roundNum 2 slope
-
-        roundYIntercept =
-            Round.roundNum 2 yIntercept
-    in
-    case question of
+getRandomOrder : Int -> RandomOrder
+getRandomOrder randomOrder =
+    case randomOrder of
         0 ->
-            WhatIsTheSlope roundSlope roundYIntercept
+            { first = 0, second = 1, third = 2 }
 
         1 ->
-            WhatIsTheIntercept roundSlope roundYIntercept
+            { first = 0, second = 2, third = 1 }
 
         2 ->
-            WhichGraph roundSlope roundYIntercept
+            { first = 1, second = 0, third = 2 }
 
         3 ->
-            WhatIsY roundSlope roundYIntercept xValue
+            { first = 1, second = 2, third = 0 }
+
+        4 ->
+            { first = 2, second = 0, third = 1 }
 
         _ ->
-            WhatIsTheSlope roundSlope roundYIntercept
+            { first = 2, second = 1, third = 0 }
+
+
+uniqueFrom : Int -> Int -> Int -> ( Int, Int )
+uniqueFrom base x y =
+    let
+        xPrime =
+            if base == x then
+                x + 1
+
+            else
+                x
+
+        yPrime =
+            if base == y && (y - 1) /= xPrime then
+                y - 1
+
+            else if base == y then
+                y - 2
+
+            else
+                y
+    in
+    ( xPrime, yPrime )
+
+
+whatIsTheSlopeQuestion : Int -> Int -> Int -> Question
+whatIsTheSlopeQuestion slope yIntercept randomOrder =
+    let
+        ( yInterceptUnique, distractor2 ) =
+            uniqueFrom slope yIntercept (slope + yIntercept)
+
+        choices =
+            Array.fromList
+                [ { answer = NumberChoice slope, feedback = "Correct!" }
+                , { answer = NumberChoice yInterceptUnique, feedback = "dist 1" }
+                , { answer = NumberChoice distractor2, feedback = "dist 2" }
+                ]
+    in
+    { questionType = WhatIsTheSlope
+    , slope = slope
+    , yIntercept = yInterceptUnique
+    , xValue = 0
+    , choices = choices
+    , randomOrder = getRandomOrder randomOrder
+    }
+
+
+
+{-
+   type alias Question =
+       { questionType : QuestionType
+       , slope : Int
+       , yIntercept : Int
+       , xValue : Int
+       , choices : Array.Array Choice -- right choice, wrong choice 1, wrong choice 2
+       , randomOrder : RandomOrder -- first button has choice <x>, second button has choice <y>, third button has choice <z>
+       }
+-}
+
+
+makeQuestion : Int -> Int -> Int -> Int -> Int -> Question
+makeQuestion whatQuestion slope yIntercept xValue randomOrder =
+    case whatQuestion of
+        0 ->
+            whatIsTheSlopeQuestion slope yIntercept randomOrder
+
+        _ ->
+            whatIsTheSlopeQuestion slope yIntercept randomOrder
+
+
+
+-- 1 ->
+--     WhatIsTheIntercept roundSlope roundYIntercept
+-- 2 ->
+--     WhichGraph roundSlope roundYIntercept
+-- 3 ->
+--     WhatIsY roundSlope roundYIntercept xValue
+-- _ ->
+--     WhatIsTheSlope roundSlope roundYIntercept
 
 
 randomQuestionGenerator : Random.Generator Question
 randomQuestionGenerator =
-    Random.map4
-        mapNumberToQuestion
+    Random.map5
+        makeQuestion
         (Random.int 0 3)
-        (Random.float -10 10)
-        (Random.float -10 10)
+        (Random.int -10 10)
+        (Random.int -10 10)
         (Random.int 0 10)
+        (Random.int 0 5)
 
 
-updateProgress : Int -> List RightOrWrong -> RightOrWrong -> List RightOrWrong
-updateProgress window oldRWs newRW =
+updateProgress : Int -> List RightOrWrong -> Int -> Int -> List RightOrWrong
+updateProgress window oldRWs rightAnswer userAnswer =
     let
+        newRW =
+            if rightAnswer == userAnswer then
+                RightAnswer
+
+            else
+                WrongAnswer
+
         newRWs =
             List.append oldRWs [ newRW ]
 
@@ -362,10 +501,11 @@ update msg model =
             , Cmd.none
             )
 
-        GotResponse rightOrWrong ->
+        GotResponse userChoice ->
             ( { model
-                | progress = updateProgress model.window model.progress rightOrWrong
-                , status = GotAnswer rightOrWrong
+                | progress = updateProgress model.window model.progress model.question.randomOrder.first userChoice
+                , status = GotAnswer
+                , userChoice = userChoice
               }
             , Cmd.none
             )
