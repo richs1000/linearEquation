@@ -32,13 +32,23 @@
             node: document.getElementById("elm-code-is-loaded-here")
         });
 
-        model.on('change:threshold', function () {
-            console.log("new debug: ", model.get('debug'));
+        function reportChange(whatChanged) {
+            console.log("new " + whatChanged + ": " + model.get('debug'));
             app.ports.getFromTorus.send({
                 'threshold': model.get('threshold'),
                 'window': model.get('window'),
                 'debug': model.get('debug')
             });
+        }
+
+        model.on('change:debug', function () {
+            reportChange('debug');
+            // console.log("new debug: ", model.get('debug'));
+            // app.ports.getFromTorus.send({
+            //     'threshold': model.get('threshold'),
+            //     'window': model.get('window'),
+            //     'debug': model.get('debug')
+            // });
         });
 
         model.on('change:threshold', function () {

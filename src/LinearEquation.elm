@@ -176,7 +176,7 @@ questionText question =
             "Which graph corresponds to this equation?"
 
         WhatIsY ->
-            "If x = " ++ String.fromInt question.xValue ++ "what does y equal?"
+            "If x = " ++ String.fromInt question.xValue ++ " what does y equal?"
 
 
 equationAsString : Int -> Int -> String
@@ -196,18 +196,23 @@ equationAsString slope yIntercept =
         ++ String.fromInt (abs yIntercept)
 
 
+getIndex : RandomOrder -> Int -> Int
+getIndex randomOrder x =
+    if x == randomOrder.first then
+        0
+
+    else if x == randomOrder.second then
+        1
+
+    else
+        2
+
+
 extractFeedback : Model -> String
 extractFeedback model =
     let
         index =
-            if model.userChoice == model.question.randomOrder.first then
-                0
-
-            else if model.userChoice == model.question.randomOrder.second then
-                1
-
-            else
-                2
+            getIndex model.question.randomOrder model.userChoice
     in
     model.question.choices
         |> Array.get index
@@ -222,7 +227,7 @@ viewFeedbackPanel model =
             div [ id "feedbackPanel" ] []
 
         WaitingForAnswer ->
-            div [ id "feedbackPanel" ] [ text "Choose the correct answer" ]
+            div [ id "feedbackPanel" ] []
 
         GotAnswer ->
             div [ id "feedbackPanel" ] [ text (extractFeedback model) ]
@@ -242,14 +247,7 @@ extractAnswer : Int -> Model -> String
 extractAnswer buttonIndex model =
     let
         answerIndex =
-            if buttonIndex == model.question.randomOrder.first then
-                0
-
-            else if buttonIndex == model.question.randomOrder.second then
-                1
-
-            else
-                2
+            getIndex model.question.randomOrder buttonIndex
 
         answer =
             model.question.choices
@@ -376,46 +374,58 @@ getRandomOrder randomOrder =
             { first = 2, second = 1, third = 0 }
 
 
-uniqueFrom : Int -> Int -> Int -> ( Int, Int )
-uniqueFrom base x y =
+whatIsTheInterceptQuestion : Int -> Int -> Int -> Int -> Question
+whatIsTheInterceptQuestion slope yIntercept xValue randomOrder =
     let
-        xPrime =
-            if base == x then
-                x + 1
-
-            else
-                x
-
-        yPrime =
-            if base == y && (y - 1) /= xPrime then
-                y - 1
-
-            else if base == y then
-                y - 2
-
-            else
-                y
+        choices =
+            Array.fromList
+                [ { answer = NumberChoice yIntercept, feedback = "Correct!" }
+                , { answer = NumberChoice slope, feedback = "dist 1" }
+                , { answer = NumberChoice xValue, feedback = "dist 2" }
+                ]
     in
-    ( xPrime, yPrime )
+    { questionType = WhatIsTheIntercept
+    , slope = slope
+    , yIntercept = yIntercept
+    , xValue = xValue
+    , choices = choices
+    , randomOrder = getRandomOrder randomOrder
+    }
 
 
-whatIsTheSlopeQuestion : Int -> Int -> Int -> Question
-whatIsTheSlopeQuestion slope yIntercept randomOrder =
+whatIsTheSlopeQuestion : Int -> Int -> Int -> Int -> Question
+whatIsTheSlopeQuestion slope yIntercept xValue randomOrder =
     let
-        ( yInterceptUnique, distractor2 ) =
-            uniqueFrom slope yIntercept (slope + yIntercept)
-
         choices =
             Array.fromList
                 [ { answer = NumberChoice slope, feedback = "Correct!" }
-                , { answer = NumberChoice yInterceptUnique, feedback = "dist 1" }
-                , { answer = NumberChoice distractor2, feedback = "dist 2" }
+                , { answer = NumberChoice yIntercept, feedback = "dist 1" }
+                , { answer = NumberChoice xValue, feedback = "dist 2" }
                 ]
     in
     { questionType = WhatIsTheSlope
     , slope = slope
-    , yIntercept = yInterceptUnique
-    , xValue = 0
+    , yIntercept = yIntercept
+    , xValue = xValue
+    , choices = choices
+    , randomOrder = getRandomOrder randomOrder
+    }
+
+
+whatIsYQuestion : Int -> Int -> Int -> Int -> Question
+whatIsYQuestion slope yIntercept xValue randomOrder =
+    let
+        choices =
+            Array.fromList
+                [ { answer = NumberChoice (slope * xValue + yIntercept), feedback = "Correct!" }
+                , { answer = NumberChoice yIntercept, feedback = "dist 1" }
+                , { answer = NumberChoice slope, feedback = "dist 2" }
+                ]
+    in
+    { questionType = WhatIsY
+    , slope = slope
+    , yIntercept = yIntercept
+    , xValue = xValue
     , choices = choices
     , randomOrder = getRandomOrder randomOrder
     }
@@ -434,14 +444,50 @@ whatIsTheSlopeQuestion slope yIntercept randomOrder =
 -}
 
 
+uniqueValues : Int -> Int -> Int -> ( Int, Int, Int )
+uniqueValues slope yIntercept xValue =
+    -- get yValue
+    let
+        yValue =
+            slope * xValue + yIntercept
+    in
+    if slope == 20 || yIntercept == -20 then
+        ( slope, yIntercept, xValue )
+        -- if slope = yIntercept then change yIntercept
+
+    else if slope == 0 || slope == yIntercept || slope == yValue || slope == xValue then
+        uniqueValues (slope + 1) yIntercept xValue
+        -- if slope = yValue then change yIntercept
+
+    else if yIntercept == 0 || yIntercept == xValue || yIntercept == yValue then
+        uniqueValues slope (yIntercept - 1) xValue
+        -- if yIntercept = yValue then change slope
+
+    else if xValue == yValue then
+        uniqueValues (slope + 1) yIntercept xValue
+
+    else
+        ( slope, yIntercept, xValue )
+
+
 makeQuestion : Int -> Int -> Int -> Int -> Int -> Question
 makeQuestion whatQuestion slope yIntercept xValue randomOrder =
+    let
+        ( slopeUnique, yInterceptUnique, xValueUnique ) =
+            uniqueValues slope yIntercept xValue
+    in
     case whatQuestion of
         0 ->
-            whatIsTheSlopeQuestion slope yIntercept randomOrder
+            whatIsTheSlopeQuestion slopeUnique yInterceptUnique xValueUnique randomOrder
+
+        1 ->
+            whatIsTheInterceptQuestion slopeUnique yInterceptUnique xValueUnique randomOrder
+
+        2 ->
+            whatIsYQuestion slopeUnique yInterceptUnique xValueUnique randomOrder
 
         _ ->
-            whatIsTheSlopeQuestion slope yIntercept randomOrder
+            whatIsTheSlopeQuestion slopeUnique yInterceptUnique xValueUnique randomOrder
 
 
 
@@ -459,10 +505,10 @@ randomQuestionGenerator : Random.Generator Question
 randomQuestionGenerator =
     Random.map5
         makeQuestion
-        (Random.int 0 3)
+        (Random.int 0 2)
         (Random.int -10 10)
         (Random.int -10 10)
-        (Random.int 0 10)
+        (Random.int 1 10)
         (Random.int 0 5)
 
 
