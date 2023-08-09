@@ -5632,7 +5632,7 @@ var $author$project$LinearEquation$whatIsYQuestion = F4(
 					feedback: 'dist 1'
 				},
 					{
-					answer: $author$project$LinearEquation$NumberChoice(slope),
+					answer: $author$project$LinearEquation$NumberChoice((yIntercept * xValue) + slope),
 					feedback: 'dist 2'
 				}
 				]));

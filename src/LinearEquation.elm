@@ -1,3 +1,12 @@
+{-
+
+   To Do List:
+   * Fix styling
+   * Make size of each panel consistent
+   * Add in graph questions
+-}
+
+
 port module LinearEquation exposing (..)
 
 import Array
@@ -419,7 +428,7 @@ whatIsYQuestion slope yIntercept xValue randomOrder =
             Array.fromList
                 [ { answer = NumberChoice (slope * xValue + yIntercept), feedback = "Correct!" }
                 , { answer = NumberChoice yIntercept, feedback = "dist 1" }
-                , { answer = NumberChoice slope, feedback = "dist 2" }
+                , { answer = NumberChoice (yIntercept * xValue + slope), feedback = "dist 2" }
                 ]
     in
     { questionType = WhatIsY

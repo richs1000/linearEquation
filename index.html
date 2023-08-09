@@ -43,30 +43,14 @@
 
         model.on('change:debug', function () {
             reportChange('debug');
-            // console.log("new debug: ", model.get('debug'));
-            // app.ports.getFromTorus.send({
-            //     'threshold': model.get('threshold'),
-            //     'window': model.get('window'),
-            //     'debug': model.get('debug')
-            // });
         });
 
         model.on('change:threshold', function () {
-            console.log("new threshold: ", model.get('threshold'));
-            app.ports.getFromTorus.send({
-                'threshold': model.get('threshold'),
-                'window': model.get('window'),
-                'debug': model.get('debug')
-            });
+            reportChange('threshold');
         });
 
         model.on('change:window', function () {
-            console.log("new window: ", model.get('window'));
-            app.ports.getFromTorus.send({
-                'threshold': model.get('threshold'),
-                'window': model.get('window'),
-                'debug': model.get('debug')
-            });
+            reportChange('window');
         });
 
         app.ports.sendToTorus.subscribe(function (mastery) {
