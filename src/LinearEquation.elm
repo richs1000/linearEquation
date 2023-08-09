@@ -1,8 +1,9 @@
 {-
 
    To Do List:
-   * Fix styling
-   * Make size of each panel consistent
+   + Fix styling
+   + Fix feedback
+   + Make size of each panel consistent
    * Add in graph questions
 -}
 
@@ -153,14 +154,23 @@ view model =
         ]
 
 
+questionPanelStyle : List (Attribute msg)
+questionPanelStyle =
+    [ style "padding" "5px"
+    , style "width" "600px"
+    , style "height" "300px"
+    ]
+
+
 viewQuestionPanel : Model -> Html Msg
 viewQuestionPanel model =
     case model.status of
         WaitingToStart ->
-            div [ id "questionPanel" ] []
+            div (id "questionPanel" :: questionPanelStyle)
+                []
 
         WaitingForAnswer ->
-            div [ id "questionPanel" ]
+            div (id "questionPanel" :: questionPanelStyle)
                 [ text "If this is your equation:"
                 , div [ id "questionText" ]
                     [ h3 [] [ text (equationAsString model.question.slope model.question.yIntercept) ]
@@ -169,7 +179,8 @@ viewQuestionPanel model =
                 ]
 
         GotAnswer ->
-            div [ id "questionPanel" ] []
+            div (id "questionPanel" :: questionPanelStyle)
+                []
 
 
 questionText : Question -> String
@@ -229,17 +240,28 @@ extractFeedback model =
         |> .feedback
 
 
+feedbackPanelStyle : List (Attribute msg)
+feedbackPanelStyle =
+    [ style "padding" "5px"
+    , style "width" "600px"
+    , style "height" "50px"
+    ]
+
+
 viewFeedbackPanel : Model -> Html Msg
 viewFeedbackPanel model =
     case model.status of
         WaitingToStart ->
-            div [ id "feedbackPanel" ] []
+            div (id "feedbackPanel" :: feedbackPanelStyle)
+                []
 
         WaitingForAnswer ->
-            div [ id "feedbackPanel" ] []
+            div (id "feedbackPanel" :: feedbackPanelStyle)
+                []
 
         GotAnswer ->
-            div [ id "feedbackPanel" ] [ text (extractFeedback model) ]
+            div (id "feedbackPanel" :: feedbackPanelStyle)
+                [ text (extractFeedback model) ]
 
 
 crossedThreshold : Model -> Bool
@@ -272,47 +294,75 @@ extractAnswer buttonIndex model =
             String.fromInt numberAnswer
 
 
+buttonPanelStyle : List (Attribute msg)
+buttonPanelStyle =
+    [ style "border-radius" "5px"
+    , style "padding" "5px"
+    , style "width" "600px"
+    , style "height" "50px"
+    ]
+
+
+answerButtonStyle : List (Attribute msg)
+answerButtonStyle =
+    [ style "border-radius" "5px"
+    , style "padding" "5px"
+    , style "width" "40px"
+    , style "height" "40px"
+    , style "display" "inline"
+    ]
+
+
 viewButtonPanel : Model -> Html Msg
 viewButtonPanel model =
     case model.status of
         WaitingToStart ->
-            div [ id "buttonPanel" ]
+            div (id "buttonPanel" :: buttonPanelStyle)
                 [ button
                     [ onClick GetNextQuestion ]
                     [ text "Start" ]
                 ]
 
         WaitingForAnswer ->
-            div [ id "buttonPanel" ]
+            div (id "buttonPanel" :: buttonPanelStyle)
                 [ button
-                    [ onClick (GotResponse 0) ]
+                    (onClick (GotResponse 0) :: answerButtonStyle)
                     [ text (extractAnswer 0 model) ]
                 , button
-                    [ onClick (GotResponse 1) ]
+                    (onClick (GotResponse 1) :: answerButtonStyle)
                     [ text (extractAnswer 1 model) ]
                 , button
-                    [ onClick (GotResponse 2) ]
+                    (onClick (GotResponse 2) :: answerButtonStyle)
                     [ text (extractAnswer 2 model) ]
                 ]
 
         GotAnswer ->
             if crossedThreshold model then
-                div [ id "buttonPanel" ]
+                div (id "buttonPanel" :: buttonPanelStyle)
                     [ button
                         [ onClick ReturnToTorus ]
                         [ text "Return to Torus" ]
                     ]
 
             else
-                div [ id "buttonPanel" ]
+                div (id "buttonPanel" :: buttonPanelStyle)
                     [ button
                         [ onClick GetNextQuestion ]
                         [ text "Click here to continue" ]
                     ]
 
 
-boxStyle : List (Attribute msg)
-boxStyle =
+progressPanelStyle : List (Attribute msg)
+progressPanelStyle =
+    [ style "border-radius" "5px"
+    , style "padding" "5px"
+    , style "width" "600px"
+    , style "height" "50px"
+    ]
+
+
+progressBarStyle : List (Attribute msg)
+progressBarStyle =
     [ style "border-radius" "5px"
     , style "padding" "5px"
     , style "width" "10px"
@@ -324,19 +374,20 @@ boxStyle =
 progressBox : RightOrWrong -> Html Msg
 progressBox rOrW =
     if rOrW == RightAnswer then
-        div (style "background-color" "green" :: boxStyle) []
+        div (style "background-color" "green" :: progressBarStyle) []
 
     else if rOrW == WrongAnswer then
-        div (style "background-color" "red" :: boxStyle) []
+        div (style "background-color" "red" :: progressBarStyle) []
 
     else
-        div (style "background-color" "grey" :: boxStyle) []
+        div (style "background-color" "grey" :: progressBarStyle) []
 
 
 viewProgressPanel : Model -> Html Msg
 viewProgressPanel model =
     if model.status == WaitingToStart then
-        div [ id "progressPanel" ] []
+        div (id "progressPanel" :: progressPanelStyle)
+            []
 
     else
         let
@@ -345,7 +396,7 @@ viewProgressPanel model =
                     |> List.map progressBox
         in
         div
-            [ id "progressPanel" ]
+            (id "progressPanel" :: progressPanelStyle)
             progressBar
 
 
@@ -388,9 +439,9 @@ whatIsTheInterceptQuestion slope yIntercept xValue randomOrder =
     let
         choices =
             Array.fromList
-                [ { answer = NumberChoice yIntercept, feedback = "Correct!" }
-                , { answer = NumberChoice slope, feedback = "dist 1" }
-                , { answer = NumberChoice xValue, feedback = "dist 2" }
+                [ { answer = NumberChoice yIntercept, feedback = "Correct! The y-intercept is " ++ String.fromInt yIntercept }
+                , { answer = NumberChoice slope, feedback = "That's the slope. The y-intercept is " ++ String.fromInt yIntercept }
+                , { answer = NumberChoice xValue, feedback = "That is incorrect. The y-intercept is " ++ String.fromInt yIntercept }
                 ]
     in
     { questionType = WhatIsTheIntercept
@@ -407,9 +458,9 @@ whatIsTheSlopeQuestion slope yIntercept xValue randomOrder =
     let
         choices =
             Array.fromList
-                [ { answer = NumberChoice slope, feedback = "Correct!" }
-                , { answer = NumberChoice yIntercept, feedback = "dist 1" }
-                , { answer = NumberChoice xValue, feedback = "dist 2" }
+                [ { answer = NumberChoice slope, feedback = "Correct! The slope is " ++ String.fromInt slope }
+                , { answer = NumberChoice yIntercept, feedback = "That's the y-intercept. The slope is " ++ String.fromInt slope }
+                , { answer = NumberChoice xValue, feedback = "That is incorrct. The slope is " ++ String.fromInt slope }
                 ]
     in
     { questionType = WhatIsTheSlope
@@ -424,11 +475,14 @@ whatIsTheSlopeQuestion slope yIntercept xValue randomOrder =
 whatIsYQuestion : Int -> Int -> Int -> Int -> Question
 whatIsYQuestion slope yIntercept xValue randomOrder =
     let
+        yValue =
+            slope * xValue + yIntercept
+
         choices =
             Array.fromList
-                [ { answer = NumberChoice (slope * xValue + yIntercept), feedback = "Correct!" }
-                , { answer = NumberChoice yIntercept, feedback = "dist 1" }
-                , { answer = NumberChoice (yIntercept * xValue + slope), feedback = "dist 2" }
+                [ { answer = NumberChoice yValue, feedback = "Correct! The value of y is " ++ String.fromInt yValue }
+                , { answer = NumberChoice yIntercept, feedback = "That is the y-intercept. The value of y is " ++ String.fromInt yValue }
+                , { answer = NumberChoice (yIntercept * xValue + slope), feedback = "That is incorrect. The value of y is " ++ String.fromInt yValue }
                 ]
     in
     { questionType = WhatIsY

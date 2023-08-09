@@ -5570,15 +5570,15 @@ var $author$project$LinearEquation$whatIsTheInterceptQuestion = F4(
 				[
 					{
 					answer: $author$project$LinearEquation$NumberChoice(yIntercept),
-					feedback: 'Correct!'
+					feedback: 'Correct! The y-intercept is ' + $elm$core$String$fromInt(yIntercept)
 				},
 					{
 					answer: $author$project$LinearEquation$NumberChoice(slope),
-					feedback: 'dist 1'
+					feedback: 'That\'s the slope. The y-intercept is ' + $elm$core$String$fromInt(yIntercept)
 				},
 					{
 					answer: $author$project$LinearEquation$NumberChoice(xValue),
-					feedback: 'dist 2'
+					feedback: 'That is incorrect. The y-intercept is ' + $elm$core$String$fromInt(yIntercept)
 				}
 				]));
 		return {
@@ -5597,15 +5597,15 @@ var $author$project$LinearEquation$whatIsTheSlopeQuestion = F4(
 				[
 					{
 					answer: $author$project$LinearEquation$NumberChoice(slope),
-					feedback: 'Correct!'
+					feedback: 'Correct! The slope is ' + $elm$core$String$fromInt(slope)
 				},
 					{
 					answer: $author$project$LinearEquation$NumberChoice(yIntercept),
-					feedback: 'dist 1'
+					feedback: 'That\'s the y-intercept. The slope is ' + $elm$core$String$fromInt(slope)
 				},
 					{
 					answer: $author$project$LinearEquation$NumberChoice(xValue),
-					feedback: 'dist 2'
+					feedback: 'That is incorrct. The slope is ' + $elm$core$String$fromInt(slope)
 				}
 				]));
 		return {
@@ -5620,20 +5620,21 @@ var $author$project$LinearEquation$whatIsTheSlopeQuestion = F4(
 var $author$project$LinearEquation$WhatIsY = {$: 'WhatIsY'};
 var $author$project$LinearEquation$whatIsYQuestion = F4(
 	function (slope, yIntercept, xValue, randomOrder) {
+		var yValue = (slope * xValue) + yIntercept;
 		var choices = $elm$core$Array$fromList(
 			_List_fromArray(
 				[
 					{
-					answer: $author$project$LinearEquation$NumberChoice((slope * xValue) + yIntercept),
-					feedback: 'Correct!'
+					answer: $author$project$LinearEquation$NumberChoice(yValue),
+					feedback: 'Correct! The value of y is ' + $elm$core$String$fromInt(yValue)
 				},
 					{
 					answer: $author$project$LinearEquation$NumberChoice(yIntercept),
-					feedback: 'dist 1'
+					feedback: 'That is the y-intercept. The value of y is ' + $elm$core$String$fromInt(yValue)
 				},
 					{
 					answer: $author$project$LinearEquation$NumberChoice((yIntercept * xValue) + slope),
-					feedback: 'dist 2'
+					feedback: 'That is incorrect. The value of y is ' + $elm$core$String$fromInt(yValue)
 				}
 				]));
 		return {
@@ -5797,7 +5798,24 @@ var $author$project$LinearEquation$GotResponse = function (a) {
 	return {$: 'GotResponse', a: a};
 };
 var $author$project$LinearEquation$ReturnToTorus = {$: 'ReturnToTorus'};
+var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
+var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
+var $author$project$LinearEquation$answerButtonStyle = _List_fromArray(
+	[
+		A2($elm$html$Html$Attributes$style, 'border-radius', '5px'),
+		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+		A2($elm$html$Html$Attributes$style, 'width', '40px'),
+		A2($elm$html$Html$Attributes$style, 'height', '40px'),
+		A2($elm$html$Html$Attributes$style, 'display', 'inline')
+	]);
 var $elm$html$Html$button = _VirtualDom_node('button');
+var $author$project$LinearEquation$buttonPanelStyle = _List_fromArray(
+	[
+		A2($elm$html$Html$Attributes$style, 'border-radius', '5px'),
+		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+		A2($elm$html$Html$Attributes$style, 'width', '600px'),
+		A2($elm$html$Html$Attributes$style, 'height', '50px')
+	]);
 var $elm$core$List$filter = F2(
 	function (isGood, list) {
 		return A3(
@@ -5920,10 +5938,10 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 		case 'WaitingToStart':
 			return A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('buttonPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('buttonPanel'),
+					$author$project$LinearEquation$buttonPanelStyle),
 				_List_fromArray(
 					[
 						A2(
@@ -5940,19 +5958,19 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 		case 'WaitingForAnswer':
 			return A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('buttonPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('buttonPanel'),
+					$author$project$LinearEquation$buttonPanelStyle),
 				_List_fromArray(
 					[
 						A2(
 						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick(
-								$author$project$LinearEquation$GotResponse(0))
-							]),
+						A2(
+							$elm$core$List$cons,
+							$elm$html$Html$Events$onClick(
+								$author$project$LinearEquation$GotResponse(0)),
+							$author$project$LinearEquation$answerButtonStyle),
 						_List_fromArray(
 							[
 								$elm$html$Html$text(
@@ -5960,11 +5978,11 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 							])),
 						A2(
 						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick(
-								$author$project$LinearEquation$GotResponse(1))
-							]),
+						A2(
+							$elm$core$List$cons,
+							$elm$html$Html$Events$onClick(
+								$author$project$LinearEquation$GotResponse(1)),
+							$author$project$LinearEquation$answerButtonStyle),
 						_List_fromArray(
 							[
 								$elm$html$Html$text(
@@ -5972,11 +5990,11 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 							])),
 						A2(
 						$elm$html$Html$button,
-						_List_fromArray(
-							[
-								$elm$html$Html$Events$onClick(
-								$author$project$LinearEquation$GotResponse(2))
-							]),
+						A2(
+							$elm$core$List$cons,
+							$elm$html$Html$Events$onClick(
+								$author$project$LinearEquation$GotResponse(2)),
+							$author$project$LinearEquation$answerButtonStyle),
 						_List_fromArray(
 							[
 								$elm$html$Html$text(
@@ -5986,10 +6004,10 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 		default:
 			return $author$project$LinearEquation$crossedThreshold(model) ? A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('buttonPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('buttonPanel'),
+					$author$project$LinearEquation$buttonPanelStyle),
 				_List_fromArray(
 					[
 						A2(
@@ -6004,10 +6022,10 @@ var $author$project$LinearEquation$viewButtonPanel = function (model) {
 							]))
 					])) : A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('buttonPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('buttonPanel'),
+					$author$project$LinearEquation$buttonPanelStyle),
 				_List_fromArray(
 					[
 						A2(
@@ -6051,32 +6069,38 @@ var $author$project$LinearEquation$extractFeedback = function (model) {
 		$author$project$LinearEquation$emptyChoice,
 		A2($elm$core$Array$get, index, model.question.choices)).feedback;
 };
+var $author$project$LinearEquation$feedbackPanelStyle = _List_fromArray(
+	[
+		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+		A2($elm$html$Html$Attributes$style, 'width', '600px'),
+		A2($elm$html$Html$Attributes$style, 'height', '50px')
+	]);
 var $author$project$LinearEquation$viewFeedbackPanel = function (model) {
 	var _v0 = model.status;
 	switch (_v0.$) {
 		case 'WaitingToStart':
 			return A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('feedbackPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('feedbackPanel'),
+					$author$project$LinearEquation$feedbackPanelStyle),
 				_List_Nil);
 		case 'WaitingForAnswer':
 			return A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('feedbackPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('feedbackPanel'),
+					$author$project$LinearEquation$feedbackPanelStyle),
 				_List_Nil);
 		default:
 			return A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('feedbackPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('feedbackPanel'),
+					$author$project$LinearEquation$feedbackPanelStyle),
 				_List_fromArray(
 					[
 						$elm$html$Html$text(
@@ -6084,9 +6108,7 @@ var $author$project$LinearEquation$viewFeedbackPanel = function (model) {
 					]));
 	}
 };
-var $elm$virtual_dom$VirtualDom$style = _VirtualDom_style;
-var $elm$html$Html$Attributes$style = $elm$virtual_dom$VirtualDom$style;
-var $author$project$LinearEquation$boxStyle = _List_fromArray(
+var $author$project$LinearEquation$progressBarStyle = _List_fromArray(
 	[
 		A2($elm$html$Html$Attributes$style, 'border-radius', '5px'),
 		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
@@ -6100,29 +6122,36 @@ var $author$project$LinearEquation$progressBox = function (rOrW) {
 		A2(
 			$elm$core$List$cons,
 			A2($elm$html$Html$Attributes$style, 'background-color', 'green'),
-			$author$project$LinearEquation$boxStyle),
+			$author$project$LinearEquation$progressBarStyle),
 		_List_Nil) : (_Utils_eq(rOrW, $author$project$LinearEquation$WrongAnswer) ? A2(
 		$elm$html$Html$div,
 		A2(
 			$elm$core$List$cons,
 			A2($elm$html$Html$Attributes$style, 'background-color', 'red'),
-			$author$project$LinearEquation$boxStyle),
+			$author$project$LinearEquation$progressBarStyle),
 		_List_Nil) : A2(
 		$elm$html$Html$div,
 		A2(
 			$elm$core$List$cons,
 			A2($elm$html$Html$Attributes$style, 'background-color', 'grey'),
-			$author$project$LinearEquation$boxStyle),
+			$author$project$LinearEquation$progressBarStyle),
 		_List_Nil));
 };
+var $author$project$LinearEquation$progressPanelStyle = _List_fromArray(
+	[
+		A2($elm$html$Html$Attributes$style, 'border-radius', '5px'),
+		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+		A2($elm$html$Html$Attributes$style, 'width', '600px'),
+		A2($elm$html$Html$Attributes$style, 'height', '50px')
+	]);
 var $author$project$LinearEquation$viewProgressPanel = function (model) {
 	if (_Utils_eq(model.status, $author$project$LinearEquation$WaitingToStart)) {
 		return A2(
 			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$id('progressPanel')
-				]),
+			A2(
+				$elm$core$List$cons,
+				$elm$html$Html$Attributes$id('progressPanel'),
+				$author$project$LinearEquation$progressPanelStyle),
 			_List_Nil);
 	} else {
 		var progressBar = A2(
@@ -6131,10 +6160,10 @@ var $author$project$LinearEquation$viewProgressPanel = function (model) {
 			$elm$core$List$reverse(model.progress));
 		return A2(
 			$elm$html$Html$div,
-			_List_fromArray(
-				[
-					$elm$html$Html$Attributes$id('progressPanel')
-				]),
+			A2(
+				$elm$core$List$cons,
+				$elm$html$Html$Attributes$id('progressPanel'),
+				$author$project$LinearEquation$progressPanelStyle),
 			progressBar);
 	}
 };
@@ -6148,6 +6177,12 @@ var $author$project$LinearEquation$equationAsString = F2(
 			$elm$core$Basics$abs(yIntercept)))));
 	});
 var $elm$html$Html$h3 = _VirtualDom_node('h3');
+var $author$project$LinearEquation$questionPanelStyle = _List_fromArray(
+	[
+		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
+		A2($elm$html$Html$Attributes$style, 'width', '600px'),
+		A2($elm$html$Html$Attributes$style, 'height', '300px')
+	]);
 var $author$project$LinearEquation$questionText = function (question) {
 	var _v0 = question.questionType;
 	switch (_v0.$) {
@@ -6167,18 +6202,18 @@ var $author$project$LinearEquation$viewQuestionPanel = function (model) {
 		case 'WaitingToStart':
 			return A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('questionPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('questionPanel'),
+					$author$project$LinearEquation$questionPanelStyle),
 				_List_Nil);
 		case 'WaitingForAnswer':
 			return A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('questionPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('questionPanel'),
+					$author$project$LinearEquation$questionPanelStyle),
 				_List_fromArray(
 					[
 						$elm$html$Html$text('If this is your equation:'),
@@ -6205,10 +6240,10 @@ var $author$project$LinearEquation$viewQuestionPanel = function (model) {
 		default:
 			return A2(
 				$elm$html$Html$div,
-				_List_fromArray(
-					[
-						$elm$html$Html$Attributes$id('questionPanel')
-					]),
+				A2(
+					$elm$core$List$cons,
+					$elm$html$Html$Attributes$id('questionPanel'),
+					$author$project$LinearEquation$questionPanelStyle),
 				_List_Nil);
 	}
 };
