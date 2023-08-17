@@ -17,6 +17,8 @@ import Html.Attributes exposing (class, classList, id, name, src, style, title, 
 import Html.Events exposing (onClick)
 import Maybe exposing (withDefault)
 import Random
+import Svg
+import Svg.Attributes
 
 
 port getFromTorus : (Flags -> msg) -> Sub msg
@@ -27,6 +29,7 @@ port sendToTorus : Bool -> Cmd msg
 
 type Answer
     = NumberChoice Int -- when the answers are a single number (e.g., what's the slope?)
+    | LineGraphChoice String Int Int -- when the answer is a graph of an equation (name, slope, y-intercept)
     | NoChoice
 
 
@@ -157,7 +160,7 @@ view model =
 questionPanelStyle : List (Attribute msg)
 questionPanelStyle =
     [ style "padding" "5px"
-    , style "width" "600px"
+    , style "width" "800px"
     , style "height" "300px"
     ]
 
@@ -174,7 +177,7 @@ viewQuestionPanel model =
                 [ text "If this is your equation:"
                 , div [ id "questionText" ]
                     [ h3 [] [ text (equationAsString model.question.slope model.question.yIntercept) ]
-                    , text (questionText model.question)
+                    , questionText model
                     ]
                 ]
 
@@ -183,20 +186,20 @@ viewQuestionPanel model =
                 []
 
 
-questionText : Question -> String
-questionText question =
-    case question.questionType of
+questionText : Model -> Html Msg
+questionText model =
+    case model.question.questionType of
         WhatIsTheSlope ->
-            "What is the slope?"
+            text "What is the slope?"
 
         WhatIsTheIntercept ->
-            "What is the y-intercept?"
+            text "What is the y-intercept?"
 
         WhichGraph ->
-            "Which graph corresponds to this equation?"
+            whichGraphQuestion model
 
         WhatIsY ->
-            "If x = " ++ String.fromInt question.xValue ++ " what does y equal?"
+            text ("If x = " ++ String.fromInt model.question.xValue ++ " what does y equal?")
 
 
 equationAsString : Int -> Int -> String
@@ -292,6 +295,9 @@ extractAnswer buttonIndex model =
 
         NumberChoice numberAnswer ->
             String.fromInt numberAnswer
+
+        LineGraphChoice graphName _ _ ->
+            String.fromChar (Char.fromCode (65 + buttonIndex))
 
 
 buttonPanelStyle : List (Attribute msg)
@@ -513,20 +519,26 @@ uniqueValues slope yIntercept xValue =
     let
         yValue =
             slope * xValue + yIntercept
+
+        yValueWrong =
+            yIntercept * xValue + slope
     in
     if slope == 20 || yIntercept == -20 then
         ( slope, yIntercept, xValue )
         -- if slope = yIntercept then change yIntercept
 
-    else if slope == 0 || slope == yIntercept || slope == yValue || slope == xValue then
+    else if slope == 0 || slope == yIntercept || slope == yValue || slope == xValue || slope == yValueWrong then
         uniqueValues (slope + 1) yIntercept xValue
         -- if slope = yValue then change yIntercept
 
-    else if yIntercept == 0 || yIntercept == xValue || yIntercept == yValue then
+    else if yIntercept == 0 || yIntercept == xValue || yIntercept == yValue || yIntercept == yValueWrong then
         uniqueValues slope (yIntercept - 1) xValue
         -- if yIntercept = yValue then change slope
 
-    else if xValue == yValue then
+    else if xValue == yValue || xValue == yValueWrong then
+        uniqueValues (slope + 1) yIntercept xValue
+
+    else if yValue == yValueWrong then
         uniqueValues (slope + 1) yIntercept xValue
 
     else
@@ -549,6 +561,9 @@ makeQuestion whatQuestion slope yIntercept xValue randomOrder =
         2 ->
             whatIsYQuestion slopeUnique yInterceptUnique xValueUnique randomOrder
 
+        3 ->
+            whatIsGraphQuestion slopeUnique yInterceptUnique xValueUnique randomOrder
+
         _ ->
             whatIsTheSlopeQuestion slopeUnique yInterceptUnique xValueUnique randomOrder
 
@@ -568,10 +583,15 @@ randomQuestionGenerator : Random.Generator Question
 randomQuestionGenerator =
     Random.map5
         makeQuestion
-        (Random.int 0 2)
-        (Random.int -10 10)
-        (Random.int -10 10)
+        -- what kind of question
+        (Random.int 0 3)
+        -- random slope
+        (Random.int -3 3)
+        -- random yIntercept
+        (Random.int -8 8)
+        -- random xValue
         (Random.int 1 10)
+        -- random order to display choices
         (Random.int 0 5)
 
 
@@ -658,3 +678,229 @@ main =
         , update = update
         , subscriptions = subscriptions
         }
+
+
+canvasHeight : Int
+canvasHeight =
+    200
+
+
+canvasWidth : Int
+canvasWidth =
+    200
+
+
+maxX : Int
+maxX =
+    20
+
+
+minX : Int
+minX =
+    0
+
+
+maxY : Int
+maxY =
+    50
+
+
+minY : Int
+minY =
+    -50
+
+
+intervalX : Int
+intervalX =
+    (canvasWidth - (2 * graphPadding)) // (maxX - minX)
+
+
+intervalY : Int
+intervalY =
+    (canvasHeight - (2 * graphPadding)) // (maxY - minY)
+
+
+graphPadding : Int
+graphPadding =
+    5
+
+
+graphOrigin : ( Int, Int )
+graphOrigin =
+    ( graphPadding
+    , canvasHeight // 2
+    )
+
+
+graphOriginString : ( String, String )
+graphOriginString =
+    ( String.fromInt (Tuple.first graphOrigin)
+    , String.fromInt (Tuple.second graphOrigin)
+    )
+
+
+toCanvasCoordinates : ( Int, Int ) -> ( Int, Int )
+toCanvasCoordinates ( x, y ) =
+    ( toCanvasX x
+    , toCanvasY y
+    )
+
+
+toCanvasX : Int -> Int
+toCanvasX x =
+    Tuple.first graphOrigin + (x * intervalX)
+
+
+toCanvasY : Int -> Int
+toCanvasY y =
+    Tuple.second graphOrigin - (y * intervalY)
+
+
+toCanvasXString : Int -> String
+toCanvasXString x =
+    toCanvasX x
+        |> String.fromInt
+
+
+toCanvasYString : Int -> String
+toCanvasYString y =
+    toCanvasY y
+        |> String.fromInt
+
+
+whatIsGraphQuestion : Int -> Int -> Int -> Int -> Question
+whatIsGraphQuestion slope yIntercept xValue randomOrder =
+    let
+        choices =
+            Array.fromList
+                [ { answer = LineGraphChoice "Correct" slope yIntercept, feedback = "Correct!" }
+                , { answer = LineGraphChoice "wrong slope" (slope * -1) yIntercept, feedback = "That is the wrong slope" }
+                , { answer = LineGraphChoice "wrong y-intercept" slope (yIntercept * -1), feedback = "That is the wrong y-intercept" }
+                ]
+    in
+    { questionType = WhichGraph
+    , slope = slope
+    , yIntercept = yIntercept
+    , xValue = xValue
+    , choices = choices
+    , randomOrder = getRandomOrder randomOrder
+    }
+
+
+whichGraphQuestion : Model -> Html Msg
+whichGraphQuestion model =
+    div [ id "graphQuestion" ]
+        [ text "Which graph corresponds to this equation?"
+        , div [ id "graphPanel" ]
+            [ drawGraph 0 model "A"
+            , drawGraph 1 model "B"
+            , drawGraph 2 model "C"
+            ]
+        ]
+
+
+
+-- extractAnswer : Int -> Model -> String
+-- extractAnswer buttonIndex model =
+
+
+drawGraph : Int -> Model -> String -> Html msg
+drawGraph graphIndex model name =
+    let
+        answerIndex =
+            getIndex model.question.randomOrder graphIndex
+
+        answer =
+            model.question.choices
+                |> Array.get answerIndex
+                |> withDefault emptyChoice
+                |> .answer
+    in
+    div [ style "display" "inline-block" ]
+        [ div [ style "display" "block" ]
+            [ Svg.svg
+                [ Svg.Attributes.width (String.fromInt canvasWidth)
+                , Svg.Attributes.height (String.fromInt canvasHeight)
+
+                --, Svg.Attributes.viewBox "0 0 200 200"
+                , Html.Attributes.style "border-width" "2px"
+                , Html.Attributes.style "border-style" "solid"
+                , Html.Attributes.style "border-color" "black"
+                ]
+                (drawLine answer :: drawAxes)
+            ]
+        , div
+            [ style "display" "block"
+            , style "text-align" "center"
+            ]
+            [ text name ]
+        ]
+
+
+drawAxes : List (Svg.Svg msg)
+drawAxes =
+    [ Svg.line
+        [ Svg.Attributes.x1 (toCanvasXString 0)
+        , Svg.Attributes.y1 (String.fromInt graphPadding)
+        , Svg.Attributes.x2 (toCanvasXString 0)
+        , Svg.Attributes.y2 (String.fromInt (canvasHeight - graphPadding))
+        , Svg.Attributes.stroke "black"
+        ]
+        []
+    , Svg.line
+        [ Svg.Attributes.x1 (toCanvasXString 0)
+        , Svg.Attributes.y1 (toCanvasYString 0)
+        , Svg.Attributes.x2 (toCanvasXString maxX)
+        , Svg.Attributes.y2 (toCanvasYString 0)
+        , Svg.Attributes.stroke "black"
+        ]
+        []
+    ]
+
+
+
+-- type Answer
+--     = NumberChoice Int -- when the answers are a single number (e.g., what's the slope?)
+--     | LineGraphChoice String Int Int -- when the answer is a graph of an equation (name, slope, y-intercept)
+--     | NoChoice
+-- type alias Choice =
+--     { answer : Answer
+--     , feedback : String
+--     }
+
+
+drawLine : Answer -> Svg.Svg msg
+drawLine answer =
+    case answer of
+        LineGraphChoice _ slope yIntercept ->
+            let
+                x1 =
+                    0
+
+                x2 =
+                    maxX
+
+                y1 =
+                    slope * x1 + yIntercept
+
+                y2 =
+                    slope * x2 + yIntercept
+            in
+            Svg.line
+                [ Svg.Attributes.x1 (toCanvasXString x1)
+                , Svg.Attributes.y1 (toCanvasYString y1)
+                , Svg.Attributes.x2 (toCanvasXString x2)
+                , Svg.Attributes.y2 (toCanvasYString y2)
+                , Svg.Attributes.stroke "black"
+                ]
+                []
+
+        _ ->
+            Svg.line
+                [ Svg.Attributes.x1 (toCanvasXString 0)
+                , Svg.Attributes.y1 (toCanvasYString 0)
+                , Svg.Attributes.x2 (toCanvasXString 0)
+                , Svg.Attributes.y2 (toCanvasYString 0)
+                , Svg.Attributes.stroke "black"
+                ]
+                []

@@ -5470,11 +5470,12 @@ var $author$project$LinearEquation$uniqueValues = F3(
 	function (slope, yIntercept, xValue) {
 		uniqueValues:
 		while (true) {
+			var yValueWrong = (yIntercept * xValue) + slope;
 			var yValue = (slope * xValue) + yIntercept;
 			if ((slope === 20) || _Utils_eq(yIntercept, -20)) {
 				return _Utils_Tuple3(slope, yIntercept, xValue);
 			} else {
-				if ((!slope) || (_Utils_eq(slope, yIntercept) || (_Utils_eq(slope, yValue) || _Utils_eq(slope, xValue)))) {
+				if ((!slope) || (_Utils_eq(slope, yIntercept) || (_Utils_eq(slope, yValue) || (_Utils_eq(slope, xValue) || _Utils_eq(slope, yValueWrong))))) {
 					var $temp$slope = slope + 1,
 						$temp$yIntercept = yIntercept,
 						$temp$xValue = xValue;
@@ -5483,7 +5484,7 @@ var $author$project$LinearEquation$uniqueValues = F3(
 					xValue = $temp$xValue;
 					continue uniqueValues;
 				} else {
-					if ((!yIntercept) || (_Utils_eq(yIntercept, xValue) || _Utils_eq(yIntercept, yValue))) {
+					if ((!yIntercept) || (_Utils_eq(yIntercept, xValue) || (_Utils_eq(yIntercept, yValue) || _Utils_eq(yIntercept, yValueWrong)))) {
 						var $temp$slope = slope,
 							$temp$yIntercept = yIntercept - 1,
 							$temp$xValue = xValue;
@@ -5492,7 +5493,7 @@ var $author$project$LinearEquation$uniqueValues = F3(
 						xValue = $temp$xValue;
 						continue uniqueValues;
 					} else {
-						if (_Utils_eq(xValue, yValue)) {
+						if (_Utils_eq(xValue, yValue) || _Utils_eq(xValue, yValueWrong)) {
 							var $temp$slope = slope + 1,
 								$temp$yIntercept = yIntercept,
 								$temp$xValue = xValue;
@@ -5501,17 +5502,28 @@ var $author$project$LinearEquation$uniqueValues = F3(
 							xValue = $temp$xValue;
 							continue uniqueValues;
 						} else {
-							return _Utils_Tuple3(slope, yIntercept, xValue);
+							if (_Utils_eq(yValue, yValueWrong)) {
+								var $temp$slope = slope + 1,
+									$temp$yIntercept = yIntercept,
+									$temp$xValue = xValue;
+								slope = $temp$slope;
+								yIntercept = $temp$yIntercept;
+								xValue = $temp$xValue;
+								continue uniqueValues;
+							} else {
+								return _Utils_Tuple3(slope, yIntercept, xValue);
+							}
 						}
 					}
 				}
 			}
 		}
 	});
-var $author$project$LinearEquation$NumberChoice = function (a) {
-	return {$: 'NumberChoice', a: a};
-};
-var $author$project$LinearEquation$WhatIsTheIntercept = {$: 'WhatIsTheIntercept'};
+var $author$project$LinearEquation$LineGraphChoice = F3(
+	function (a, b, c) {
+		return {$: 'LineGraphChoice', a: a, b: b, c: c};
+	});
+var $author$project$LinearEquation$WhichGraph = {$: 'WhichGraph'};
 var $elm$core$Array$fromListHelp = F3(
 	function (list, nodeList, nodeListSize) {
 		fromListHelp:
@@ -5563,6 +5575,37 @@ var $author$project$LinearEquation$getRandomOrder = function (randomOrder) {
 			return {first: 2, second: 1, third: 0};
 	}
 };
+var $author$project$LinearEquation$whatIsGraphQuestion = F4(
+	function (slope, yIntercept, xValue, randomOrder) {
+		var choices = $elm$core$Array$fromList(
+			_List_fromArray(
+				[
+					{
+					answer: A3($author$project$LinearEquation$LineGraphChoice, 'Correct', slope, yIntercept),
+					feedback: 'Correct!'
+				},
+					{
+					answer: A3($author$project$LinearEquation$LineGraphChoice, 'wrong slope', slope * (-1), yIntercept),
+					feedback: 'That is the wrong slope'
+				},
+					{
+					answer: A3($author$project$LinearEquation$LineGraphChoice, 'wrong y-intercept', slope, yIntercept * (-1)),
+					feedback: 'That is the wrong y-intercept'
+				}
+				]));
+		return {
+			choices: choices,
+			questionType: $author$project$LinearEquation$WhichGraph,
+			randomOrder: $author$project$LinearEquation$getRandomOrder(randomOrder),
+			slope: slope,
+			xValue: xValue,
+			yIntercept: yIntercept
+		};
+	});
+var $author$project$LinearEquation$NumberChoice = function (a) {
+	return {$: 'NumberChoice', a: a};
+};
+var $author$project$LinearEquation$WhatIsTheIntercept = {$: 'WhatIsTheIntercept'};
 var $author$project$LinearEquation$whatIsTheInterceptQuestion = F4(
 	function (slope, yIntercept, xValue, randomOrder) {
 		var choices = $elm$core$Array$fromList(
@@ -5659,6 +5702,8 @@ var $author$project$LinearEquation$makeQuestion = F5(
 				return A4($author$project$LinearEquation$whatIsTheInterceptQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
 			case 2:
 				return A4($author$project$LinearEquation$whatIsYQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
+			case 3:
+				return A4($author$project$LinearEquation$whatIsGraphQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
 			default:
 				return A4($author$project$LinearEquation$whatIsTheSlopeQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
 		}
@@ -5695,9 +5740,9 @@ var $elm$random$Random$map5 = F6(
 var $author$project$LinearEquation$randomQuestionGenerator = A6(
 	$elm$random$Random$map5,
 	$author$project$LinearEquation$makeQuestion,
-	A2($elm$random$Random$int, 0, 2),
-	A2($elm$random$Random$int, -10, 10),
-	A2($elm$random$Random$int, -10, 10),
+	A2($elm$random$Random$int, 0, 3),
+	A2($elm$random$Random$int, -3, 3),
+	A2($elm$random$Random$int, -8, 8),
 	A2($elm$random$Random$int, 1, 10),
 	A2($elm$random$Random$int, 0, 5));
 var $elm$json$Json$Encode$bool = _Json_wrap;
@@ -5840,6 +5885,11 @@ var $author$project$LinearEquation$crossedThreshold = function (model) {
 };
 var $author$project$LinearEquation$NoChoice = {$: 'NoChoice'};
 var $author$project$LinearEquation$emptyChoice = {answer: $author$project$LinearEquation$NoChoice, feedback: 'Empty Feedback'};
+var $elm$core$String$cons = _String_cons;
+var $elm$core$String$fromChar = function (_char) {
+	return A2($elm$core$String$cons, _char, '');
+};
+var $elm$core$Char$fromCode = _Char_fromCode;
 var $elm$core$Array$bitMask = 4294967295 >>> (32 - $elm$core$Array$shiftStep);
 var $elm$core$Elm$JsArray$unsafeGet = _JsArray_unsafeGet;
 var $elm$core$Array$getHelp = F3(
@@ -5899,11 +5949,16 @@ var $author$project$LinearEquation$extractAnswer = F2(
 			$elm$core$Maybe$withDefault,
 			$author$project$LinearEquation$emptyChoice,
 			A2($elm$core$Array$get, answerIndex, model.question.choices)).answer;
-		if (answer.$ === 'NoChoice') {
-			return 'No Choice';
-		} else {
-			var numberAnswer = answer.a;
-			return $elm$core$String$fromInt(numberAnswer);
+		switch (answer.$) {
+			case 'NoChoice':
+				return 'No Choice';
+			case 'NumberChoice':
+				var numberAnswer = answer.a;
+				return $elm$core$String$fromInt(numberAnswer);
+			default:
+				var graphName = answer.a;
+				return $elm$core$String$fromChar(
+					$elm$core$Char$fromCode(65 + buttonIndex));
 		}
 	});
 var $elm$json$Json$Encode$string = _Json_wrap;
@@ -6180,20 +6235,210 @@ var $elm$html$Html$h3 = _VirtualDom_node('h3');
 var $author$project$LinearEquation$questionPanelStyle = _List_fromArray(
 	[
 		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
-		A2($elm$html$Html$Attributes$style, 'width', '600px'),
+		A2($elm$html$Html$Attributes$style, 'width', '800px'),
 		A2($elm$html$Html$Attributes$style, 'height', '300px')
 	]);
-var $author$project$LinearEquation$questionText = function (question) {
-	var _v0 = question.questionType;
+var $author$project$LinearEquation$canvasHeight = 200;
+var $author$project$LinearEquation$canvasWidth = 200;
+var $author$project$LinearEquation$graphPadding = 5;
+var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
+var $elm$svg$Svg$line = $elm$svg$Svg$trustedNode('line');
+var $author$project$LinearEquation$maxX = 20;
+var $elm$svg$Svg$Attributes$stroke = _VirtualDom_attribute('stroke');
+var $author$project$LinearEquation$graphOrigin = _Utils_Tuple2($author$project$LinearEquation$graphPadding, ($author$project$LinearEquation$canvasHeight / 2) | 0);
+var $author$project$LinearEquation$minX = 0;
+var $author$project$LinearEquation$intervalX = (($author$project$LinearEquation$canvasWidth - (2 * $author$project$LinearEquation$graphPadding)) / ($author$project$LinearEquation$maxX - $author$project$LinearEquation$minX)) | 0;
+var $author$project$LinearEquation$toCanvasX = function (x) {
+	return $author$project$LinearEquation$graphOrigin.a + (x * $author$project$LinearEquation$intervalX);
+};
+var $author$project$LinearEquation$toCanvasXString = function (x) {
+	return $elm$core$String$fromInt(
+		$author$project$LinearEquation$toCanvasX(x));
+};
+var $author$project$LinearEquation$maxY = 50;
+var $author$project$LinearEquation$minY = -50;
+var $author$project$LinearEquation$intervalY = (($author$project$LinearEquation$canvasHeight - (2 * $author$project$LinearEquation$graphPadding)) / ($author$project$LinearEquation$maxY - $author$project$LinearEquation$minY)) | 0;
+var $elm$core$Tuple$second = function (_v0) {
+	var y = _v0.b;
+	return y;
+};
+var $author$project$LinearEquation$toCanvasY = function (y) {
+	return $author$project$LinearEquation$graphOrigin.b - (y * $author$project$LinearEquation$intervalY);
+};
+var $author$project$LinearEquation$toCanvasYString = function (y) {
+	return $elm$core$String$fromInt(
+		$author$project$LinearEquation$toCanvasY(y));
+};
+var $elm$svg$Svg$Attributes$x1 = _VirtualDom_attribute('x1');
+var $elm$svg$Svg$Attributes$x2 = _VirtualDom_attribute('x2');
+var $elm$svg$Svg$Attributes$y1 = _VirtualDom_attribute('y1');
+var $elm$svg$Svg$Attributes$y2 = _VirtualDom_attribute('y2');
+var $author$project$LinearEquation$drawAxes = _List_fromArray(
+	[
+		A2(
+		$elm$svg$Svg$line,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$x1(
+				$author$project$LinearEquation$toCanvasXString(0)),
+				$elm$svg$Svg$Attributes$y1(
+				$elm$core$String$fromInt($author$project$LinearEquation$graphPadding)),
+				$elm$svg$Svg$Attributes$x2(
+				$author$project$LinearEquation$toCanvasXString(0)),
+				$elm$svg$Svg$Attributes$y2(
+				$elm$core$String$fromInt($author$project$LinearEquation$canvasHeight - $author$project$LinearEquation$graphPadding)),
+				$elm$svg$Svg$Attributes$stroke('black')
+			]),
+		_List_Nil),
+		A2(
+		$elm$svg$Svg$line,
+		_List_fromArray(
+			[
+				$elm$svg$Svg$Attributes$x1(
+				$author$project$LinearEquation$toCanvasXString(0)),
+				$elm$svg$Svg$Attributes$y1(
+				$author$project$LinearEquation$toCanvasYString(0)),
+				$elm$svg$Svg$Attributes$x2(
+				$author$project$LinearEquation$toCanvasXString($author$project$LinearEquation$maxX)),
+				$elm$svg$Svg$Attributes$y2(
+				$author$project$LinearEquation$toCanvasYString(0)),
+				$elm$svg$Svg$Attributes$stroke('black')
+			]),
+		_List_Nil)
+	]);
+var $author$project$LinearEquation$drawLine = function (answer) {
+	if (answer.$ === 'LineGraphChoice') {
+		var slope = answer.b;
+		var yIntercept = answer.c;
+		var x2 = $author$project$LinearEquation$maxX;
+		var y2 = (slope * x2) + yIntercept;
+		var x1 = 0;
+		var y1 = (slope * x1) + yIntercept;
+		return A2(
+			$elm$svg$Svg$line,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$x1(
+					$author$project$LinearEquation$toCanvasXString(x1)),
+					$elm$svg$Svg$Attributes$y1(
+					$author$project$LinearEquation$toCanvasYString(y1)),
+					$elm$svg$Svg$Attributes$x2(
+					$author$project$LinearEquation$toCanvasXString(x2)),
+					$elm$svg$Svg$Attributes$y2(
+					$author$project$LinearEquation$toCanvasYString(y2)),
+					$elm$svg$Svg$Attributes$stroke('black')
+				]),
+			_List_Nil);
+	} else {
+		return A2(
+			$elm$svg$Svg$line,
+			_List_fromArray(
+				[
+					$elm$svg$Svg$Attributes$x1(
+					$author$project$LinearEquation$toCanvasXString(0)),
+					$elm$svg$Svg$Attributes$y1(
+					$author$project$LinearEquation$toCanvasYString(0)),
+					$elm$svg$Svg$Attributes$x2(
+					$author$project$LinearEquation$toCanvasXString(0)),
+					$elm$svg$Svg$Attributes$y2(
+					$author$project$LinearEquation$toCanvasYString(0)),
+					$elm$svg$Svg$Attributes$stroke('black')
+				]),
+			_List_Nil);
+	}
+};
+var $elm$svg$Svg$Attributes$height = _VirtualDom_attribute('height');
+var $elm$svg$Svg$svg = $elm$svg$Svg$trustedNode('svg');
+var $elm$svg$Svg$Attributes$width = _VirtualDom_attribute('width');
+var $author$project$LinearEquation$drawGraph = F3(
+	function (graphIndex, model, name) {
+		var answerIndex = A2($author$project$LinearEquation$getIndex, model.question.randomOrder, graphIndex);
+		var answer = A2(
+			$elm$core$Maybe$withDefault,
+			$author$project$LinearEquation$emptyChoice,
+			A2($elm$core$Array$get, answerIndex, model.question.choices)).answer;
+		return A2(
+			$elm$html$Html$div,
+			_List_fromArray(
+				[
+					A2($elm$html$Html$Attributes$style, 'display', 'inline-block')
+				]),
+			_List_fromArray(
+				[
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'display', 'block')
+						]),
+					_List_fromArray(
+						[
+							A2(
+							$elm$svg$Svg$svg,
+							_List_fromArray(
+								[
+									$elm$svg$Svg$Attributes$width(
+									$elm$core$String$fromInt($author$project$LinearEquation$canvasWidth)),
+									$elm$svg$Svg$Attributes$height(
+									$elm$core$String$fromInt($author$project$LinearEquation$canvasHeight)),
+									A2($elm$html$Html$Attributes$style, 'border-width', '2px'),
+									A2($elm$html$Html$Attributes$style, 'border-style', 'solid'),
+									A2($elm$html$Html$Attributes$style, 'border-color', 'black')
+								]),
+							A2(
+								$elm$core$List$cons,
+								$author$project$LinearEquation$drawLine(answer),
+								$author$project$LinearEquation$drawAxes))
+						])),
+					A2(
+					$elm$html$Html$div,
+					_List_fromArray(
+						[
+							A2($elm$html$Html$Attributes$style, 'display', 'block'),
+							A2($elm$html$Html$Attributes$style, 'text-align', 'center')
+						]),
+					_List_fromArray(
+						[
+							$elm$html$Html$text(name)
+						]))
+				]));
+	});
+var $author$project$LinearEquation$whichGraphQuestion = function (model) {
+	return A2(
+		$elm$html$Html$div,
+		_List_fromArray(
+			[
+				$elm$html$Html$Attributes$id('graphQuestion')
+			]),
+		_List_fromArray(
+			[
+				$elm$html$Html$text('Which graph corresponds to this equation?'),
+				A2(
+				$elm$html$Html$div,
+				_List_fromArray(
+					[
+						$elm$html$Html$Attributes$id('graphPanel')
+					]),
+				_List_fromArray(
+					[
+						A3($author$project$LinearEquation$drawGraph, 0, model, 'A'),
+						A3($author$project$LinearEquation$drawGraph, 1, model, 'B'),
+						A3($author$project$LinearEquation$drawGraph, 2, model, 'C')
+					]))
+			]));
+};
+var $author$project$LinearEquation$questionText = function (model) {
+	var _v0 = model.question.questionType;
 	switch (_v0.$) {
 		case 'WhatIsTheSlope':
-			return 'What is the slope?';
+			return $elm$html$Html$text('What is the slope?');
 		case 'WhatIsTheIntercept':
-			return 'What is the y-intercept?';
+			return $elm$html$Html$text('What is the y-intercept?');
 		case 'WhichGraph':
-			return 'Which graph corresponds to this equation?';
+			return $author$project$LinearEquation$whichGraphQuestion(model);
 		default:
-			return 'If x = ' + ($elm$core$String$fromInt(question.xValue) + ' what does y equal?');
+			return $elm$html$Html$text(
+				'If x = ' + ($elm$core$String$fromInt(model.question.xValue) + ' what does y equal?'));
 	}
 };
 var $author$project$LinearEquation$viewQuestionPanel = function (model) {
@@ -6233,8 +6478,7 @@ var $author$project$LinearEquation$viewQuestionPanel = function (model) {
 										$elm$html$Html$text(
 										A2($author$project$LinearEquation$equationAsString, model.question.slope, model.question.yIntercept))
 									])),
-								$elm$html$Html$text(
-								$author$project$LinearEquation$questionText(model.question))
+								$author$project$LinearEquation$questionText(model)
 							]))
 					]));
 		default:
