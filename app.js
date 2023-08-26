@@ -5312,9 +5312,13 @@ var $author$project$LinearEquation$getFromTorus = _Platform_incomingPort(
 var $author$project$LinearEquation$subscriptions = function (_v0) {
 	return $author$project$LinearEquation$getFromTorus($author$project$LinearEquation$GetDataFromTorus);
 };
+var $author$project$LinearEquation$GetNextQuestion = {$: 'GetNextQuestion'};
 var $author$project$LinearEquation$GotAnswer = {$: 'GotAnswer'};
 var $author$project$LinearEquation$GotRandomQuestion = function (a) {
 	return {$: 'GotRandomQuestion', a: a};
+};
+var $author$project$LinearEquation$GotRandomQuestionParameters = function (a) {
+	return {$: 'GotRandomQuestionParameters', a: a};
 };
 var $author$project$LinearEquation$WaitingForAnswer = {$: 'WaitingForAnswer'};
 var $elm$random$Random$Generate = function (a) {
@@ -5424,100 +5428,11 @@ var $elm$random$Random$generate = F2(
 			$elm$random$Random$Generate(
 				A2($elm$random$Random$map, tagger, generator)));
 	});
-var $elm$core$Bitwise$and = _Bitwise_and;
-var $elm$core$Basics$negate = function (n) {
-	return -n;
-};
-var $elm$core$Bitwise$xor = _Bitwise_xor;
-var $elm$random$Random$peel = function (_v0) {
-	var state = _v0.a;
-	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
-	return ((word >>> 22) ^ word) >>> 0;
-};
-var $elm$random$Random$int = F2(
-	function (a, b) {
-		return $elm$random$Random$Generator(
-			function (seed0) {
-				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
-				var lo = _v0.a;
-				var hi = _v0.b;
-				var range = (hi - lo) + 1;
-				if (!((range - 1) & range)) {
-					return _Utils_Tuple2(
-						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
-						$elm$random$Random$next(seed0));
-				} else {
-					var threshhold = (((-range) >>> 0) % range) >>> 0;
-					var accountForBias = function (seed) {
-						accountForBias:
-						while (true) {
-							var x = $elm$random$Random$peel(seed);
-							var seedN = $elm$random$Random$next(seed);
-							if (_Utils_cmp(x, threshhold) < 0) {
-								var $temp$seed = seedN;
-								seed = $temp$seed;
-								continue accountForBias;
-							} else {
-								return _Utils_Tuple2((x % range) + lo, seedN);
-							}
-						}
-					};
-					return accountForBias(seed0);
-				}
-			});
-	});
-var $author$project$LinearEquation$uniqueValues = F3(
+var $author$project$LinearEquation$goodValues = F3(
 	function (slope, yIntercept, xValue) {
-		uniqueValues:
-		while (true) {
-			var yValueWrong = (yIntercept * xValue) + slope;
-			var yValue = (slope * xValue) + yIntercept;
-			if ((slope === 20) || _Utils_eq(yIntercept, -20)) {
-				return _Utils_Tuple3(slope, yIntercept, xValue);
-			} else {
-				if ((!slope) || (_Utils_eq(slope, yIntercept) || (_Utils_eq(slope, yValue) || (_Utils_eq(slope, xValue) || _Utils_eq(slope, yValueWrong))))) {
-					var $temp$slope = slope + 1,
-						$temp$yIntercept = yIntercept,
-						$temp$xValue = xValue;
-					slope = $temp$slope;
-					yIntercept = $temp$yIntercept;
-					xValue = $temp$xValue;
-					continue uniqueValues;
-				} else {
-					if ((!yIntercept) || (_Utils_eq(yIntercept, xValue) || (_Utils_eq(yIntercept, yValue) || _Utils_eq(yIntercept, yValueWrong)))) {
-						var $temp$slope = slope,
-							$temp$yIntercept = yIntercept - 1,
-							$temp$xValue = xValue;
-						slope = $temp$slope;
-						yIntercept = $temp$yIntercept;
-						xValue = $temp$xValue;
-						continue uniqueValues;
-					} else {
-						if (_Utils_eq(xValue, yValue) || _Utils_eq(xValue, yValueWrong)) {
-							var $temp$slope = slope + 1,
-								$temp$yIntercept = yIntercept,
-								$temp$xValue = xValue;
-							slope = $temp$slope;
-							yIntercept = $temp$yIntercept;
-							xValue = $temp$xValue;
-							continue uniqueValues;
-						} else {
-							if (_Utils_eq(yValue, yValueWrong)) {
-								var $temp$slope = slope + 1,
-									$temp$yIntercept = yIntercept,
-									$temp$xValue = xValue;
-								slope = $temp$slope;
-								yIntercept = $temp$yIntercept;
-								xValue = $temp$xValue;
-								continue uniqueValues;
-							} else {
-								return _Utils_Tuple3(slope, yIntercept, xValue);
-							}
-						}
-					}
-				}
-			}
-		}
+		var yValueWrong = (yIntercept * xValue) + slope;
+		var yValue = (slope * xValue) + yIntercept;
+		return ((!slope) || (_Utils_eq(slope, yIntercept) || (_Utils_eq(slope, yValue) || (_Utils_eq(slope, xValue) || _Utils_eq(slope, yValueWrong))))) ? false : (((!yIntercept) || (_Utils_eq(yIntercept, xValue) || (_Utils_eq(yIntercept, yValue) || _Utils_eq(yIntercept, yValueWrong)))) ? false : ((_Utils_eq(xValue, yValue) || _Utils_eq(xValue, yValueWrong)) ? false : (_Utils_eq(yValue, yValueWrong) ? false : true)));
 	});
 var $author$project$LinearEquation$LineGraphChoice = F3(
 	function (a, b, c) {
@@ -5575,138 +5490,176 @@ var $author$project$LinearEquation$getRandomOrder = function (randomOrder) {
 			return {first: 2, second: 1, third: 0};
 	}
 };
-var $author$project$LinearEquation$whatIsGraphQuestion = F4(
-	function (slope, yIntercept, xValue, randomOrder) {
-		var choices = $elm$core$Array$fromList(
-			_List_fromArray(
-				[
-					{
-					answer: A3($author$project$LinearEquation$LineGraphChoice, 'Correct', slope, yIntercept),
-					feedback: 'Correct!'
-				},
-					{
-					answer: A3($author$project$LinearEquation$LineGraphChoice, 'wrong slope', slope * (-1), yIntercept),
-					feedback: 'That is the wrong slope'
-				},
-					{
-					answer: A3($author$project$LinearEquation$LineGraphChoice, 'wrong y-intercept', slope, yIntercept * (-1)),
-					feedback: 'That is the wrong y-intercept'
-				}
-				]));
-		return {
-			choices: choices,
-			questionType: $author$project$LinearEquation$WhichGraph,
-			randomOrder: $author$project$LinearEquation$getRandomOrder(randomOrder),
-			slope: slope,
-			xValue: xValue,
-			yIntercept: yIntercept
-		};
-	});
+var $elm$core$Basics$negate = function (n) {
+	return -n;
+};
+var $author$project$LinearEquation$whatIsGraphQuestion = function (qp) {
+	var choices = $elm$core$Array$fromList(
+		_List_fromArray(
+			[
+				{
+				answer: A3($author$project$LinearEquation$LineGraphChoice, 'Correct', qp.slope, qp.yIntercept),
+				feedback: 'Correct!'
+			},
+				{
+				answer: A3($author$project$LinearEquation$LineGraphChoice, 'wrong slope', qp.slope * (-1), qp.yIntercept),
+				feedback: 'That is incorrect. That graph shows a line with the wrong slope'
+			},
+				{
+				answer: A3($author$project$LinearEquation$LineGraphChoice, 'wrong y-intercept', qp.slope, qp.yIntercept * (-1)),
+				feedback: 'That is incorrect. That graph shows a line with the wrong y-intercept'
+			}
+			]));
+	return {
+		choices: choices,
+		questionType: $author$project$LinearEquation$WhichGraph,
+		randomOrder: $author$project$LinearEquation$getRandomOrder(qp.randomOrder),
+		slope: qp.slope,
+		xValue: qp.xValue,
+		yIntercept: qp.yIntercept
+	};
+};
 var $author$project$LinearEquation$NumberChoice = function (a) {
 	return {$: 'NumberChoice', a: a};
 };
 var $author$project$LinearEquation$WhatIsTheIntercept = {$: 'WhatIsTheIntercept'};
-var $author$project$LinearEquation$whatIsTheInterceptQuestion = F4(
-	function (slope, yIntercept, xValue, randomOrder) {
-		var choices = $elm$core$Array$fromList(
-			_List_fromArray(
-				[
-					{
-					answer: $author$project$LinearEquation$NumberChoice(yIntercept),
-					feedback: 'Correct! The y-intercept is ' + $elm$core$String$fromInt(yIntercept)
-				},
-					{
-					answer: $author$project$LinearEquation$NumberChoice(slope),
-					feedback: 'That\'s the slope. The y-intercept is ' + $elm$core$String$fromInt(yIntercept)
-				},
-					{
-					answer: $author$project$LinearEquation$NumberChoice(xValue),
-					feedback: 'That is incorrect. The y-intercept is ' + $elm$core$String$fromInt(yIntercept)
-				}
-				]));
-		return {
-			choices: choices,
-			questionType: $author$project$LinearEquation$WhatIsTheIntercept,
-			randomOrder: $author$project$LinearEquation$getRandomOrder(randomOrder),
-			slope: slope,
-			xValue: xValue,
-			yIntercept: yIntercept
-		};
-	});
-var $author$project$LinearEquation$whatIsTheSlopeQuestion = F4(
-	function (slope, yIntercept, xValue, randomOrder) {
-		var choices = $elm$core$Array$fromList(
-			_List_fromArray(
-				[
-					{
-					answer: $author$project$LinearEquation$NumberChoice(slope),
-					feedback: 'Correct! The slope is ' + $elm$core$String$fromInt(slope)
-				},
-					{
-					answer: $author$project$LinearEquation$NumberChoice(yIntercept),
-					feedback: 'That\'s the y-intercept. The slope is ' + $elm$core$String$fromInt(slope)
-				},
-					{
-					answer: $author$project$LinearEquation$NumberChoice(xValue),
-					feedback: 'That is incorrct. The slope is ' + $elm$core$String$fromInt(slope)
-				}
-				]));
-		return {
-			choices: choices,
-			questionType: $author$project$LinearEquation$WhatIsTheSlope,
-			randomOrder: $author$project$LinearEquation$getRandomOrder(randomOrder),
-			slope: slope,
-			xValue: xValue,
-			yIntercept: yIntercept
-		};
-	});
+var $author$project$LinearEquation$whatIsTheInterceptQuestion = function (qp) {
+	var choices = $elm$core$Array$fromList(
+		_List_fromArray(
+			[
+				{
+				answer: $author$project$LinearEquation$NumberChoice(qp.yIntercept),
+				feedback: 'Correct! The y-intercept is ' + $elm$core$String$fromInt(qp.yIntercept)
+			},
+				{
+				answer: $author$project$LinearEquation$NumberChoice(qp.slope),
+				feedback: 'That\'s the slope. The y-intercept is ' + $elm$core$String$fromInt(qp.yIntercept)
+			},
+				{
+				answer: $author$project$LinearEquation$NumberChoice(qp.xValue),
+				feedback: 'That is incorrect. The y-intercept is ' + $elm$core$String$fromInt(qp.yIntercept)
+			}
+			]));
+	return {
+		choices: choices,
+		questionType: $author$project$LinearEquation$WhatIsTheIntercept,
+		randomOrder: $author$project$LinearEquation$getRandomOrder(qp.randomOrder),
+		slope: qp.slope,
+		xValue: qp.xValue,
+		yIntercept: qp.yIntercept
+	};
+};
+var $author$project$LinearEquation$whatIsTheSlopeQuestion = function (qp) {
+	var choices = $elm$core$Array$fromList(
+		_List_fromArray(
+			[
+				{
+				answer: $author$project$LinearEquation$NumberChoice(qp.slope),
+				feedback: 'Correct! The slope is ' + $elm$core$String$fromInt(qp.slope)
+			},
+				{
+				answer: $author$project$LinearEquation$NumberChoice(qp.yIntercept),
+				feedback: 'That\'s the y-intercept. The slope is ' + $elm$core$String$fromInt(qp.slope)
+			},
+				{
+				answer: $author$project$LinearEquation$NumberChoice(qp.xValue),
+				feedback: 'That is incorrct. The slope is ' + $elm$core$String$fromInt(qp.slope)
+			}
+			]));
+	return {
+		choices: choices,
+		questionType: $author$project$LinearEquation$WhatIsTheSlope,
+		randomOrder: $author$project$LinearEquation$getRandomOrder(qp.randomOrder),
+		slope: qp.slope,
+		xValue: qp.xValue,
+		yIntercept: qp.yIntercept
+	};
+};
 var $author$project$LinearEquation$WhatIsY = {$: 'WhatIsY'};
-var $author$project$LinearEquation$whatIsYQuestion = F4(
-	function (slope, yIntercept, xValue, randomOrder) {
-		var yValue = (slope * xValue) + yIntercept;
-		var choices = $elm$core$Array$fromList(
-			_List_fromArray(
-				[
-					{
-					answer: $author$project$LinearEquation$NumberChoice(yValue),
-					feedback: 'Correct! The value of y is ' + $elm$core$String$fromInt(yValue)
-				},
-					{
-					answer: $author$project$LinearEquation$NumberChoice(yIntercept),
-					feedback: 'That is the y-intercept. The value of y is ' + $elm$core$String$fromInt(yValue)
-				},
-					{
-					answer: $author$project$LinearEquation$NumberChoice((yIntercept * xValue) + slope),
-					feedback: 'That is incorrect. The value of y is ' + $elm$core$String$fromInt(yValue)
-				}
-				]));
-		return {
-			choices: choices,
-			questionType: $author$project$LinearEquation$WhatIsY,
-			randomOrder: $author$project$LinearEquation$getRandomOrder(randomOrder),
-			slope: slope,
-			xValue: xValue,
-			yIntercept: yIntercept
-		};
-	});
-var $author$project$LinearEquation$makeQuestion = F5(
+var $author$project$LinearEquation$whatIsYQuestion = function (qp) {
+	var yValue = (qp.slope * qp.xValue) + qp.yIntercept;
+	var choices = $elm$core$Array$fromList(
+		_List_fromArray(
+			[
+				{
+				answer: $author$project$LinearEquation$NumberChoice(yValue),
+				feedback: 'Correct! The value of y is ' + $elm$core$String$fromInt(yValue)
+			},
+				{
+				answer: $author$project$LinearEquation$NumberChoice(qp.yIntercept),
+				feedback: 'That is the y-intercept. The value of y is ' + $elm$core$String$fromInt(yValue)
+			},
+				{
+				answer: $author$project$LinearEquation$NumberChoice((qp.yIntercept * qp.xValue) + qp.slope),
+				feedback: 'That is incorrect. The value of y is ' + $elm$core$String$fromInt(yValue)
+			}
+			]));
+	return {
+		choices: choices,
+		questionType: $author$project$LinearEquation$WhatIsY,
+		randomOrder: $author$project$LinearEquation$getRandomOrder(qp.randomOrder),
+		slope: qp.slope,
+		xValue: qp.xValue,
+		yIntercept: qp.yIntercept
+	};
+};
+var $author$project$LinearEquation$makeQuestion = function (questionParameters) {
+	var _v0 = questionParameters.whatQuestion;
+	switch (_v0) {
+		case 0:
+			return $author$project$LinearEquation$whatIsTheSlopeQuestion(questionParameters);
+		case 1:
+			return $author$project$LinearEquation$whatIsTheInterceptQuestion(questionParameters);
+		case 2:
+			return $author$project$LinearEquation$whatIsYQuestion(questionParameters);
+		case 3:
+			return $author$project$LinearEquation$whatIsGraphQuestion(questionParameters);
+		default:
+			return $author$project$LinearEquation$whatIsTheSlopeQuestion(questionParameters);
+	}
+};
+var $author$project$LinearEquation$QuestionParameters = F5(
 	function (whatQuestion, slope, yIntercept, xValue, randomOrder) {
-		var _v0 = A3($author$project$LinearEquation$uniqueValues, slope, yIntercept, xValue);
-		var slopeUnique = _v0.a;
-		var yInterceptUnique = _v0.b;
-		var xValueUnique = _v0.c;
-		switch (whatQuestion) {
-			case 0:
-				return A4($author$project$LinearEquation$whatIsTheSlopeQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
-			case 1:
-				return A4($author$project$LinearEquation$whatIsTheInterceptQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
-			case 2:
-				return A4($author$project$LinearEquation$whatIsYQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
-			case 3:
-				return A4($author$project$LinearEquation$whatIsGraphQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
-			default:
-				return A4($author$project$LinearEquation$whatIsTheSlopeQuestion, slopeUnique, yInterceptUnique, xValueUnique, randomOrder);
-		}
+		return {randomOrder: randomOrder, slope: slope, whatQuestion: whatQuestion, xValue: xValue, yIntercept: yIntercept};
+	});
+var $elm$core$Bitwise$and = _Bitwise_and;
+var $elm$core$Bitwise$xor = _Bitwise_xor;
+var $elm$random$Random$peel = function (_v0) {
+	var state = _v0.a;
+	var word = (state ^ (state >>> ((state >>> 28) + 4))) * 277803737;
+	return ((word >>> 22) ^ word) >>> 0;
+};
+var $elm$random$Random$int = F2(
+	function (a, b) {
+		return $elm$random$Random$Generator(
+			function (seed0) {
+				var _v0 = (_Utils_cmp(a, b) < 0) ? _Utils_Tuple2(a, b) : _Utils_Tuple2(b, a);
+				var lo = _v0.a;
+				var hi = _v0.b;
+				var range = (hi - lo) + 1;
+				if (!((range - 1) & range)) {
+					return _Utils_Tuple2(
+						(((range - 1) & $elm$random$Random$peel(seed0)) >>> 0) + lo,
+						$elm$random$Random$next(seed0));
+				} else {
+					var threshhold = (((-range) >>> 0) % range) >>> 0;
+					var accountForBias = function (seed) {
+						accountForBias:
+						while (true) {
+							var x = $elm$random$Random$peel(seed);
+							var seedN = $elm$random$Random$next(seed);
+							if (_Utils_cmp(x, threshhold) < 0) {
+								var $temp$seed = seedN;
+								seed = $temp$seed;
+								continue accountForBias;
+							} else {
+								return _Utils_Tuple2((x % range) + lo, seedN);
+							}
+						}
+					};
+					return accountForBias(seed0);
+				}
+			});
 	});
 var $elm$random$Random$map5 = F6(
 	function (func, _v0, _v1, _v2, _v3, _v4) {
@@ -5737,9 +5690,9 @@ var $elm$random$Random$map5 = F6(
 					seed5);
 			});
 	});
-var $author$project$LinearEquation$randomQuestionGenerator = A6(
+var $author$project$LinearEquation$questionParametersGenerator = A6(
 	$elm$random$Random$map5,
-	$author$project$LinearEquation$makeQuestion,
+	$author$project$LinearEquation$QuestionParameters,
 	A2($elm$random$Random$int, 0, 3),
 	A2($elm$random$Random$int, -3, 3),
 	A2($elm$random$Random$int, -8, 8),
@@ -5791,54 +5744,72 @@ var $author$project$LinearEquation$updateProgress = F4(
 	});
 var $author$project$LinearEquation$update = F2(
 	function (msg, model) {
-		switch (msg.$) {
-			case 'GetNextQuestion':
-				return _Utils_Tuple2(
-					_Utils_update(
+		update:
+		while (true) {
+			switch (msg.$) {
+				case 'GetNextQuestion':
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{status: $author$project$LinearEquation$WaitingForAnswer}),
+						A2($elm$random$Random$generate, $author$project$LinearEquation$GotRandomQuestionParameters, $author$project$LinearEquation$questionParametersGenerator));
+				case 'GotRandomQuestionParameters':
+					var qp = msg.a;
+					if (A3($author$project$LinearEquation$goodValues, qp.slope, qp.yIntercept, qp.xValue)) {
+						var $temp$msg = $author$project$LinearEquation$GotRandomQuestion(
+							$author$project$LinearEquation$makeQuestion(qp)),
+							$temp$model = model;
+						msg = $temp$msg;
+						model = $temp$model;
+						continue update;
+					} else {
+						var $temp$msg = $author$project$LinearEquation$GetNextQuestion,
+							$temp$model = model;
+						msg = $temp$msg;
+						model = $temp$model;
+						continue update;
+					}
+				case 'GotRandomQuestion':
+					var newQuestion = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{question: newQuestion, status: $author$project$LinearEquation$WaitingForAnswer}),
+						$elm$core$Platform$Cmd$none);
+				case 'GotResponse':
+					var userChoice = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								progress: A4($author$project$LinearEquation$updateProgress, model.window, model.progress, model.question.randomOrder.first, userChoice),
+								status: $author$project$LinearEquation$GotAnswer,
+								userChoice: userChoice
+							}),
+						$elm$core$Platform$Cmd$none);
+				case 'ReturnToTorus':
+					return _Utils_Tuple2(
 						model,
-						{status: $author$project$LinearEquation$WaitingForAnswer}),
-					A2($elm$random$Random$generate, $author$project$LinearEquation$GotRandomQuestion, $author$project$LinearEquation$randomQuestionGenerator));
-			case 'GotRandomQuestion':
-				var newQuestion = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{question: newQuestion, status: $author$project$LinearEquation$WaitingForAnswer}),
-					$elm$core$Platform$Cmd$none);
-			case 'GotResponse':
-				var userChoice = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							progress: A4($author$project$LinearEquation$updateProgress, model.window, model.progress, model.question.randomOrder.first, userChoice),
-							status: $author$project$LinearEquation$GotAnswer,
-							userChoice: userChoice
-						}),
-					$elm$core$Platform$Cmd$none);
-			case 'ReturnToTorus':
-				return _Utils_Tuple2(
-					model,
-					$author$project$LinearEquation$sendToTorus(true));
-			default:
-				var flags = msg.a;
-				return _Utils_Tuple2(
-					_Utils_update(
-						model,
-						{
-							debug: flags.debug,
-							progress: A2($elm$core$List$repeat, flags.window, $author$project$LinearEquation$NothingYet),
-							threshold: flags.threshold,
-							window: flags.window
-						}),
-					$elm$core$Platform$Cmd$none);
+						$author$project$LinearEquation$sendToTorus(true));
+				default:
+					var flags = msg.a;
+					return _Utils_Tuple2(
+						_Utils_update(
+							model,
+							{
+								debug: flags.debug,
+								progress: A2($elm$core$List$repeat, flags.window, $author$project$LinearEquation$NothingYet),
+								threshold: flags.threshold,
+								window: flags.window
+							}),
+						$elm$core$Platform$Cmd$none);
+			}
 		}
 	});
 var $elm$html$Html$div = _VirtualDom_node('div');
 var $elm$html$Html$h1 = _VirtualDom_node('h1');
 var $elm$virtual_dom$VirtualDom$text = _VirtualDom_text;
 var $elm$html$Html$text = $elm$virtual_dom$VirtualDom$text;
-var $author$project$LinearEquation$GetNextQuestion = {$: 'GetNextQuestion'};
 var $author$project$LinearEquation$GotResponse = function (a) {
 	return {$: 'GotResponse', a: a};
 };
@@ -6128,7 +6099,9 @@ var $author$project$LinearEquation$feedbackPanelStyle = _List_fromArray(
 	[
 		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
 		A2($elm$html$Html$Attributes$style, 'width', '600px'),
-		A2($elm$html$Html$Attributes$style, 'height', '50px')
+		A2($elm$html$Html$Attributes$style, 'height', '30px'),
+		A2($elm$html$Html$Attributes$style, 'vertical-align', 'middle'),
+		A2($elm$html$Html$Attributes$style, 'border-style', 'solid')
 	]);
 var $author$project$LinearEquation$viewFeedbackPanel = function (model) {
 	var _v0 = model.status;
@@ -6236,9 +6209,9 @@ var $author$project$LinearEquation$questionPanelStyle = _List_fromArray(
 	[
 		A2($elm$html$Html$Attributes$style, 'padding', '5px'),
 		A2($elm$html$Html$Attributes$style, 'width', '800px'),
-		A2($elm$html$Html$Attributes$style, 'height', '300px')
+		A2($elm$html$Html$Attributes$style, 'height', '270px')
 	]);
-var $author$project$LinearEquation$canvasHeight = 200;
+var $author$project$LinearEquation$canvasHeight = 150;
 var $author$project$LinearEquation$canvasWidth = 200;
 var $author$project$LinearEquation$graphPadding = 5;
 var $elm$svg$Svg$trustedNode = _VirtualDom_nodeNS('http://www.w3.org/2000/svg');
@@ -6488,7 +6461,28 @@ var $author$project$LinearEquation$viewQuestionPanel = function (model) {
 					$elm$core$List$cons,
 					$elm$html$Html$Attributes$id('questionPanel'),
 					$author$project$LinearEquation$questionPanelStyle),
-				_List_Nil);
+				_List_fromArray(
+					[
+						$elm$html$Html$text('If this is your equation:'),
+						A2(
+						$elm$html$Html$div,
+						_List_fromArray(
+							[
+								$elm$html$Html$Attributes$id('questionText')
+							]),
+						_List_fromArray(
+							[
+								A2(
+								$elm$html$Html$h3,
+								_List_Nil,
+								_List_fromArray(
+									[
+										$elm$html$Html$text(
+										A2($author$project$LinearEquation$equationAsString, model.question.slope, model.question.yIntercept))
+									])),
+								$author$project$LinearEquation$questionText(model)
+							]))
+					]));
 	}
 };
 var $author$project$LinearEquation$view = function (model) {
